@@ -16,7 +16,7 @@ spreadsheet containing multiple columns that get populated with key data, listin
 so forth. Bloviations and vibe-coding from a.i. Claude code & ChatGPT Codex.
 
 The Spreadsheet of this project, is viewable at:
-https://docs.google.com/spreadsheets/d/1Kwc429QBrfUCZzyB1BlzLp7wd16pyS14G42Fn7DgMm0/edit?usp=sharing
+https://docs.google.com/spreadsheets/d/1Q9vF2L3K6D2Ptg94kgfpupGikGkF27CcwyihWiLbhH8/edit?usp=sharing
 
 
 Another larger Example Spreadsheet is viewable at:
