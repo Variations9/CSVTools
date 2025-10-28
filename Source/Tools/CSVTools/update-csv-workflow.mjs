@@ -53,10 +53,11 @@ async function main() {
   console.log('  6) Lines-of-code counting (Column N)');
   console.log('  7) Input/output mapping (Column O)');
   console.log('  8) Side effects extraction (Column P)');
-  console.log('  9) Cyclomatic complexity extraction (Column Y)');
-  console.log(' 10) Execution context classification (Column W)');
-  console.log(' 11) Error handling coverage assessment (Column X)');
-  console.log(' 12) Feature synopsis extraction (Column FEATURES)');
+  console.log('  9) API usage tracking (Column API USAGE)');
+  console.log(' 10) Cyclomatic complexity extraction (Column Y)');
+  console.log(' 11) Execution context classification (Column W)');
+  console.log(' 12) Error handling coverage assessment (Column X)');
+  console.log(' 13) Feature synopsis extraction (Column FEATURES)');
   console.log('='.repeat(60));
 
   const startTime = Date.now();
@@ -139,6 +140,14 @@ async function main() {
       },
     });
 
+    // NEW: API Usage Extraction
+    const apiUsageScriptPath = path.join(__dirname, 'updateApiUsage.mjs');
+    await executeScript(apiUsageScriptPath, 'API Usage Extraction', {
+      env: {
+        CSV_PROJECT_MAP_PATH: snapshotPath,
+      },
+    });
+
     const complexityScriptPath = path.join(
       __dirname,
       'updateCyclomaticComplexity.mjs'
@@ -188,7 +197,7 @@ async function main() {
     console.log(`Duration: ${durationSeconds} seconds`);
     console.log(`Updated snapshot: ${snapshotPath}`);
     console.log(
-      'Columns refreshed: FUNCTIONS (J), ORDER_OF_OPERATIONS (K), DEPENDENCIES (L), DATA FLOW / STATE MANAGEMENT (M), LINES OF CODE (N), INPUT SOURCES / OUTPUT DESTINATIONS (O), SIDE EFFECTS (P), EXECUTION CONTEXT (W), ERROR HANDLING COVERAGE (X), CYCLOMATIC COMPLEXITY (Y), FEATURES.'
+      'Columns refreshed: FUNCTIONS (J), ORDER_OF_OPERATIONS (K), DEPENDENCIES (L), DATA FLOW / STATE MANAGEMENT (M), LINES OF CODE (N), INPUT SOURCES / OUTPUT DESTINATIONS (O), SIDE EFFECTS (P), API USAGE, EXECUTION CONTEXT (W), ERROR HANDLING COVERAGE (X), CYCLOMATIC COMPLEXITY (Y), FEATURES.'
     );
     console.log('Base CSV left untouched.');
   } catch (error) {
@@ -250,4 +259,3 @@ function isSnapshotFilename(name) {
     /^FolderStructure_\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}\.csv$/i.test(name)
   );
 }
-
