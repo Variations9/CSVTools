@@ -1,0 +1,1 @@
+To capture the folder structure, select the root folder (the Source folder), right-click, and select : Generate Markdown.  Paste into here and Save.

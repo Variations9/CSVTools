@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSV Merger & Sync Tool</title>
+    <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+    <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useMemo } = React;
+
+        function CSVMerger() {
+            const [masterFile, setMasterFile] = useState(null);
+            const [snapshotFile, setSnapshotFile] = useState(null);
+            const [masterData, setMasterData] = useState([]);
+            const [snapshotData, setSnapshotData] = useState([]);
+            const [masterHeaders, setMasterHeaders] = useState([]);
+            const [snapshotHeaders, setSnapshotHeaders] = useState([]);
+            const [mergedData, setMergedData] = useState([]);
+            const [activeTab, setActiveTab] = useState('compare');
+            const [editingCell, setEditingCell] = useState(null);
+            const [searchTerm, setSearchTerm] = useState('');
+            const [differences, setDifferences] = useState({ added: [], removed: [], modified: [] });
+            const [history, setHistory] = useState([]);
+            const [historyIndex, setHistoryIndex] = useState(-1);
+            const [autoMerged, setAutoMerged] = useState(false);
+
+            const parseCSVLine = (line) => {
+                const result = [];
+                let current = '';
+                let inQuotes = false;
+                
+                for (let i = 0; i < line.length; i++) {
+                    const char = line[i];
+                    const nextChar = line[i + 1];
+                    
+                    if (char === '"') {
+                        if (inQuotes && nextChar === '"') {
+                            current += '"';
+                            i++;
+                        } else {
+                            inQuotes = !inQuotes;
+                        }
+                    } else if (char === ',' && !inQuotes) {
+                        result.push(current);
+                        current = '';
+                    } else {
+                        current += char;
+                    }
+                }
+                result.push(current);
+                return result;
+            };
+
+            const parseCSV = (text) => {
+                const lines = text.trim().split('\n');
+                if (lines.length === 0) return { headers: [], data: [] };
+
+                const headerRow = parseCSVLine(lines[0]);
+                const dataRows = [];
+                
+                for (let i = 1; i < lines.length; i++) {
+                    if (lines[i].trim()) {
+                        const row = parseCSVLine(lines[i]);
+                        dataRows.push(row);
+                    }
+                }
+                
+                return { headers: headerRow, data: dataRows };
+            };
+
+            const handleMasterUpload = (event) => {
+                const file = event.target.files[0];
+                if (file) {
+                    setMasterFile(file.name);
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const text = e.target.result;
+                        const { headers: h, data: d } = parseCSV(text);
+                        setMasterHeaders(h);
+                        setMasterData(d);
+                        setMergedData(d);
+                        
+                        setHistory([JSON.parse(JSON.stringify(d))]);
+                        setHistoryIndex(0);
+                        
+                        if (snapshotData.length > 0) {
+                            compareCSVs(d, h, snapshotData, snapshotHeaders);
+                        }
+                    };
+                    reader.readAsText(file);
+                }
+            };
+
+            const handleSnapshotUpload = (event) => {
+                const file = event.target.files[0];
+                if (file) {
+                    setSnapshotFile(file.name);
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const text = e.target.result;
+                        const { headers: h, data: d } = parseCSV(text);
+                        setSnapshotHeaders(h);
+                        setSnapshotData(d);
+                        
+                        if (masterData.length > 0) {
+                            compareCSVs(masterData, masterHeaders, d, h);
+                        }
+                    };
+                    reader.readAsText(file);
+                }
+            };
+
+            const getRowKey = (row, headers) => {
+                // Find all folder-related columns
+                const folderCols = [];
+                headers.forEach((h, idx) => {
+                    const headerLower = h.toLowerCase().trim();
+                    if (headerLower.includes('folder') || headerLower.includes('root')) {
+                        folderCols.push(idx);
+                    }
+                });
+                
+                // Build path from folder columns, filtering out empty values
+                const pathParts = folderCols
+                    .map(idx => (row[idx] || '').trim())
+                    .filter(part => part.length > 0);
+                
+                return pathParts.join('/');
+            };
+
+            const compareCSVs = (master, masterHdrs, snapshot, snapshotHdrs) => {
+                console.log('Comparing CSVs:', {
+                    masterRows: master.length,
+                    snapshotRows: snapshot.length,
+                    masterHeaders: masterHdrs,
+                    snapshotHeaders: snapshotHdrs
+                });
+                
+                const masterMap = new Map();
+                master.forEach((row, idx) => {
+                    const key = getRowKey(row, masterHdrs);
+                    if (key) {
+                        masterMap.set(key, { row, index: idx });
+                    }
+                });
+
+                const snapshotMap = new Map();
+                snapshot.forEach((row, idx) => {
+                    const key = getRowKey(row, snapshotHdrs);
+                    if (key) {
+                        snapshotMap.set(key, { row, index: idx });
+                    }
+                });
+
+                console.log('Built maps:', {
+                    masterKeys: masterMap.size,
+                    snapshotKeys: snapshotMap.size,
+                    sampleMasterKeys: Array.from(masterMap.keys()).slice(0, 5),
+                    sampleSnapshotKeys: Array.from(snapshotMap.keys()).slice(0, 5)
+                });
+
+                const added = [];
+                const removed = [];
+
+                snapshotMap.forEach((value, key) => {
+                    if (!masterMap.has(key)) {
+                        added.push({ key, snapshotRow: value.row });
+                    }
+                });
+
+                masterMap.forEach((value, key) => {
+                    if (!snapshotMap.has(key)) {
+                        removed.push({ key, masterRow: value.row, masterIndex: value.index });
+                    }
+                });
+
+                console.log('Comparison results:', {
+                    added: added.length,
+                    removed: removed.length
+                });
+
+                setDifferences({ added, removed, modified: [] });
+            };
+
+            const sortMergedData = (data, headers) => {
+                // Create a copy to avoid mutating original
+                const sorted = [...data];
+                
+                // Find folder column indices
+                const folderCols = [];
+                headers.forEach((h, idx) => {
+                    const headerLower = h.toLowerCase().trim();
+                    if (headerLower.includes('folder') || headerLower.includes('root')) {
+                        folderCols.push(idx);
+                    }
+                });
+                
+                // Sort by folder hierarchy, then by filename
+                sorted.sort((a, b) => {
+                    // Compare each folder level
+                    for (let i = 0; i < folderCols.length; i++) {
+                        const colIdx = folderCols[i];
+                        const aVal = (a[colIdx] || '').toLowerCase().trim();
+                        const bVal = (b[colIdx] || '').toLowerCase().trim();
+                        
+                        if (aVal !== bVal) {
+                            // Empty values go to the end
+                            if (!aVal) return 1;
+                            if (!bVal) return -1;
+                            return aVal.localeCompare(bVal, undefined, { numeric: true, sensitivity: 'base' });
+                        }
+                    }
+                    
+                    // If all folder levels are the same, sort by the last non-empty value (filename)
+                    for (let i = a.length - 1; i >= 0; i--) {
+                        const aVal = (a[i] || '').toLowerCase().trim();
+                        const bVal = (b[i] || '').toLowerCase().trim();
+                        
+                        if (aVal && bVal && aVal !== bVal) {
+                            return aVal.localeCompare(bVal, undefined, { numeric: true, sensitivity: 'base' });
+                        }
+                    }
+                    
+                    return 0;
+                });
+                
+                return sorted;
+            };
+
+            const autoMerge = () => {
+                if (!masterData.length || !snapshotData.length) return;
+
+                saveToHistory();
+
+                // Create a copy of master data
+                let newMerged = JSON.parse(JSON.stringify(masterData));
+                
+                // Build a set of indices to remove
+                const removedIndices = new Set();
+                differences.removed.forEach(diff => {
+                    removedIndices.add(diff.masterIndex);
+                });
+
+                // Filter out removed items
+                newMerged = newMerged.filter((_, idx) => !removedIndices.has(idx));
+
+                // Add new items from snapshot
+                differences.added.forEach(diff => {
+                    const newRow = new Array(masterHeaders.length).fill('');
+                    
+                    snapshotHeaders.forEach((snapshotHeader, snapIdx) => {
+                        const masterIdx = masterHeaders.findIndex(h => 
+                            h.toLowerCase().trim() === snapshotHeader.toLowerCase().trim()
+                        );
+                        if (masterIdx !== -1) {
+                            newRow[masterIdx] = diff.snapshotRow[snapIdx] || '';
+                        }
+                    });
+                    
+                    newMerged.push(newRow);
+                });
+                
+                // Sort the merged data alphabetically by folder hierarchy
+                newMerged = sortMergedData(newMerged, masterHeaders);
+                
+                console.log('Merge complete:', {
+                    originalMaster: masterData.length,
+                    removed: differences.removed.length,
+                    added: differences.added.length,
+                    finalCount: newMerged.length,
+                    sorted: true
+                });
+                
+                setMergedData(newMerged);
+                setMasterData(newMerged); // Update master too
+                setAutoMerged(true);
+                setDifferences({ added: [], removed: [], modified: [] });
+            };
+
+            const saveToHistory = () => {
+                const newHistory = history.slice(0, historyIndex + 1);
+                newHistory.push(JSON.parse(JSON.stringify(mergedData)));
+                setHistory(newHistory);
+                setHistoryIndex(newHistory.length - 1);
+            };
+
+            const undo = () => {
+                if (historyIndex > 0) {
+                    setHistoryIndex(historyIndex - 1);
+                    setMergedData(JSON.parse(JSON.stringify(history[historyIndex - 1])));
+                }
+            };
+
+            const redo = () => {
+                if (historyIndex < history.length - 1) {
+                    setHistoryIndex(historyIndex + 1);
+                    setMergedData(JSON.parse(JSON.stringify(history[historyIndex + 1])));
+                }
+            };
+
+            const updateCell = (rowIndex, colIndex, value) => {
+                saveToHistory();
+                const newData = [...mergedData];
+                newData[rowIndex][colIndex] = value;
+                setMergedData(newData);
+                setEditingCell(null);
+            };
+
+            const addRow = () => {
+                saveToHistory();
+                const newRow = new Array(masterHeaders.length).fill('');
+                setMergedData([...mergedData, newRow]);
+            };
+
+            const deleteRow = (rowIndex) => {
+                saveToHistory();
+                const newData = mergedData.filter((_, idx) => idx !== rowIndex);
+                setMergedData(newData);
+            };
+
+            const exportCSV = () => {
+                let csv = masterHeaders.map(h => `"${h}"`).join(',') + '\n';
+                mergedData.forEach(row => {
+                    csv += row.map(cell => `"${cell}"`).join(',') + '\n';
+                });
+                
+                const blob = new Blob([csv], { type: 'text/csv' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = masterFile || 'merged-data.csv';
+                a.click();
+                URL.revokeObjectURL(url);
+            };
+
+            const filteredData = useMemo(() => {
+                let data = mergedData;
+                
+                if (searchTerm) {
+                    data = data.filter(row => {
+                        return row.some(cell => 
+                            cell.toLowerCase().includes(searchTerm.toLowerCase())
+                        );
+                    });
+                }
+                
+                return data;
+            }, [mergedData, searchTerm]);
+
+            return (
+                <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-100 p-6">
+                    <div className="max-w-7xl mx-auto">
+                        <div className="bg-white rounded-lg shadow-xl p-6 mb-6">
+                            <div className="flex items-center gap-3 mb-4">
+                                <svg className="w-10 h-10 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                                </svg>
+                                <h1 className="text-3xl font-bold text-gray-800">CSV Merger & Sync Tool</h1>
+                            </div>
+                            <p className="text-gray-600">
+                                Merge a new folder structure snapshot into your master CSV while preserving all custom data.
+                            </p>
+                        </div>
+
+                        <div className="bg-white rounded-lg shadow-xl p-6 mb-6">
+                            <h2 className="text-xl font-bold text-gray-800 mb-4">Upload Files</h2>
+                            <div className="grid md:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                        Master CSV (Left) - With Your Custom Data
+                                    </label>
+                                    <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-blue-300 rounded-lg cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-colors">
+                                        <div className="text-center">
+                                            <svg className="w-8 h-8 text-blue-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                                            </svg>
+                                            <span className="text-sm text-gray-600 font-medium">
+                                                {masterFile || 'Upload Master CSV'}
+                                            </span>
+                                        </div>
+                                        <input type="file" accept=".csv" onChange={handleMasterUpload} className="hidden" />
+                                    </label>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                        New Snapshot CSV (Right) - Latest Folder Structure
+                                    </label>
+                                    <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-purple-300 rounded-lg cursor-pointer hover:border-purple-500 hover:bg-purple-50 transition-colors">
+                                        <div className="text-center">
+                                            <svg className="w-8 h-8 text-purple-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                                            </svg>
+                                            <span className="text-sm text-gray-600 font-medium">
+                                                {snapshotFile || 'Upload Snapshot CSV'}
+                                            </span>
+                                        </div>
+                                        <input type="file" accept=".csv" onChange={handleSnapshotUpload} className="hidden" />
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        {masterData.length > 0 && (
+                            <>
+                                <div className="bg-white rounded-lg shadow-xl mb-6">
+                                    <div className="flex border-b border-gray-200">
+                                        <button
+                                            onClick={() => setActiveTab('compare')}
+                                            className={`flex-1 py-4 px-6 font-semibold transition-colors ${
+                                                activeTab === 'compare'
+                                                    ? 'bg-blue-100 text-blue-700 border-b-2 border-blue-600'
+                                                    : 'text-gray-600 hover:bg-gray-50'
+                                            }`}
+                                        >
+                                            🔍 Compare & Merge
+                                        </button>
+                                        <button
+                                            onClick={() => setActiveTab('edit')}
+                                            className={`flex-1 py-4 px-6 font-semibold transition-colors ${
+                                                activeTab === 'edit'
+                                                    ? 'bg-blue-100 text-blue-700 border-b-2 border-blue-600'
+                                                    : 'text-gray-600 hover:bg-gray-50'
+                                            }`}
+                                        >
+                                            ✏️ Edit Merged Data
+                                        </button>
+                                        <button
+                                            onClick={() => setActiveTab('stats')}
+                                            className={`flex-1 py-4 px-6 font-semibold transition-colors ${
+                                                activeTab === 'stats'
+                                                    ? 'bg-blue-100 text-blue-700 border-b-2 border-blue-600'
+                                                    : 'text-gray-600 hover:bg-gray-50'
+                                            }`}
+                                        >
+                                            📊 Statistics
+                                        </button>
+                                    </div>
+
+                                    {activeTab === 'compare' && (
+                                        <div className="p-6">
+                                            {snapshotData.length === 0 ? (
+                                                <div className="text-center py-12">
+                                                    <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                                                    </svg>
+                                                    <p className="text-gray-500 text-lg">Upload a snapshot CSV to compare and merge</p>
+                                                </div>
+                                            ) : (
+                                                <>
+                                                    <div className="grid md:grid-cols-3 gap-4 mb-6">
+                                                        <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                                                            <div className="text-3xl font-bold text-green-700">{differences.added.length}</div>
+                                                            <div className="text-sm text-gray-600">Items to Add</div>
+                                                        </div>
+                                                        <div className="bg-red-50 p-4 rounded-lg border border-red-200">
+                                                            <div className="text-3xl font-bold text-red-700">{differences.removed.length}</div>
+                                                            <div className="text-sm text-gray-600">Items to Remove</div>
+                                                        </div>
+                                                        <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                                                            <div className="text-3xl font-bold text-blue-700">{mergedData.length}</div>
+                                                            <div className="text-sm text-gray-600">Total Items After Merge</div>
+                                                        </div>
+                                                    </div>
+
+                                                    {(differences.added.length > 0 || differences.removed.length > 0) && !autoMerged && (
+                                                        <div className="mb-6">
+                                                            <button
+                                                                onClick={autoMerge}
+                                                                className="w-full bg-gradient-to-r from-green-600 to-blue-600 text-white py-4 px-6 rounded-lg font-bold text-lg hover:from-green-700 hover:to-blue-700 transition-colors shadow-lg"
+                                                            >
+                                                                ⚡ Auto-Merge Changes
+                                                            </button>
+                                                        </div>
+                                                    )}
+
+                                                    {autoMerged && (
+                                                        <div className="mb-6 bg-green-50 border-2 border-green-300 rounded-lg p-6 text-center">
+                                                            <div className="text-6xl mb-4">✅</div>
+                                                            <h3 className="text-2xl font-bold text-green-800 mb-2">Merge Complete!</h3>
+                                                            <p className="text-green-700 mb-4">Your master CSV has been updated with the latest snapshot.</p>
+                                                            <div className="flex gap-3 justify-center">
+                                                                <button
+                                                                    onClick={() => setActiveTab('edit')}
+                                                                    className="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+                                                                >
+                                                                    ✏️ Review & Edit
+                                                                </button>
+                                                                <button
+                                                                    onClick={exportCSV}
+                                                                    className="px-6 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors"
+                                                                >
+                                                                    💾 Export CSV
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    )}
+
+                                                    {differences.added.length > 0 && (
+                                                        <div className="mb-6">
+                                                            <h3 className="text-lg font-bold text-green-700 mb-3">
+                                                                ➕ Items to Add ({differences.added.length})
+                                                            </h3>
+                                                            <div className="space-y-2 max-h-64 overflow-y-auto">
+                                                                {differences.added.map((diff, idx) => (
+                                                                    <div key={idx} className="bg-green-50 border border-green-200 rounded-lg p-3">
+                                                                        <span className="font-mono text-sm text-green-800">{diff.key}</span>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    )}
+
+                                                    {differences.removed.length > 0 && (
+                                                        <div className="mb-6">
+                                                            <h3 className="text-lg font-bold text-red-700 mb-3">
+                                                                ➖ Items to Remove ({differences.removed.length})
+                                                            </h3>
+                                                            <div className="space-y-2 max-h-64 overflow-y-auto">
+                                                                {differences.removed.map((diff, idx) => (
+                                                                    <div key={idx} className="bg-red-50 border border-red-200 rounded-lg p-3">
+                                                                        <span className="font-mono text-sm text-red-800">{diff.key}</span>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </>
+                                            )}
+                                        </div>
+                                    )}
+
+                                    {activeTab === 'edit' && (
+                                        <div className="p-6">
+                                            <div className="mb-4 flex gap-4 flex-wrap items-center">
+                                                <input
+                                                    type="text"
+                                                    placeholder="Search..."
+                                                    value={searchTerm}
+                                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                                    className="flex-1 min-w-[200px] px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none"
+                                                />
+                                            </div>
+
+                                            <div className="mb-4 flex gap-2 flex-wrap">
+                                                <button
+                                                    onClick={addRow}
+                                                    className="px-4 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors"
+                                                >
+                                                    + Add Row
+                                                </button>
+                                                <button
+                                                    onClick={undo}
+                                                    disabled={historyIndex <= 0}
+                                                    className="px-4 py-2 bg-gray-600 text-white rounded-lg font-semibold hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                                >
+                                                    ↶ Undo
+                                                </button>
+                                                <button
+                                                    onClick={redo}
+                                                    disabled={historyIndex >= history.length - 1}
+                                                    className="px-4 py-2 bg-gray-600 text-white rounded-lg font-semibold hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                                >
+                                                    ↷ Redo
+                                                </button>
+                                                <button
+                                                    onClick={exportCSV}
+                                                    className="ml-auto px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+                                                >
+                                                    💾 Export CSV
+                                                </button>
+                                            </div>
+
+                                            <div className="overflow-x-auto border-2 border-gray-300 rounded-lg">
+                                                <table className="w-full text-sm">
+                                                    <thead>
+                                                        <tr className="bg-blue-100">
+                                                            <th className="p-2 text-center border-b-2 border-blue-200 w-12">#</th>
+                                                            {masterHeaders.map((header, idx) => (
+                                                                <th key={idx} className="p-2 text-left border-b-2 border-blue-200">
+                                                                    <span className="font-semibold">{header}</span>
+                                                                </th>
+                                                            ))}
+                                                            <th className="p-2 text-center border-b-2 border-blue-200 w-20">Actions</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {filteredData.map((row, rowIdx) => {
+                                                            const actualRowIdx = mergedData.indexOf(row);
+                                                            return (
+                                                                <tr key={actualRowIdx} className="border-b border-gray-200 hover:bg-blue-50">
+                                                                    <td className="p-2 text-center text-gray-500 border-r border-gray-200">
+                                                                        {actualRowIdx + 1}
+                                                                    </td>
+                                                                    {row.map((cell, colIdx) => (
+                                                                        <td
+                                                                            key={colIdx}
+                                                                            className="p-2 border-r border-gray-100 cursor-pointer hover:bg-blue-100"
+                                                                            onClick={() => setEditingCell({ row: actualRowIdx, col: colIdx })}
+                                                                        >
+                                                                            {editingCell?.row === actualRowIdx && editingCell?.col === colIdx ? (
+                                                                                <input
+                                                                                    type="text"
+                                                                                    value={cell}
+                                                                                    onChange={(e) => updateCell(actualRowIdx, colIdx, e.target.value)}
+                                                                                    onBlur={() => setEditingCell(null)}
+                                                                                    autoFocus
+                                                                                    className="w-full px-2 py-1 border border-blue-400 rounded focus:outline-none focus:border-blue-600"
+                                                                                />
+                                                                            ) : (
+                                                                                <span>{cell}</span>
+                                                                            )}
+                                                                        </td>
+                                                                    ))}
+                                                                    <td className="p-2 text-center">
+                                                                        <button
+                                                                            onClick={() => deleteRow(actualRowIdx)}
+                                                                            className="text-red-600 hover:text-red-800 font-bold"
+                                                                        >
+                                                                            🗑️
+                                                                        </button>
+                                                                    </td>
+                                                                </tr>
+                                                            );
+                                                        })}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {activeTab === 'stats' && (
+                                        <div className="p-6">
+                                            <div className="grid md:grid-cols-3 gap-4 mb-6">
+                                                <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                                                    <div className="text-2xl font-bold text-blue-700">{mergedData.length}</div>
+                                                    <div className="text-sm text-gray-600">Total Rows</div>
+                                                </div>
+                                                <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
+                                                    <div className="text-2xl font-bold text-purple-700">{masterHeaders.length}</div>
+                                                    <div className="text-sm text-gray-600">Total Columns</div>
+                                                </div>
+                                                <div className="bg-indigo-50 p-4 rounded-lg border border-indigo-200">
+                                                    <div className="text-2xl font-bold text-indigo-700">
+                                                        {mergedData.reduce((sum, row) => sum + row.filter(cell => cell.trim()).length, 0)}
+                                                    </div>
+                                                    <div className="text-sm text-gray-600">Non-Empty Cells</div>
+                                                </div>
+                                            </div>
+
+                                            <h3 className="text-lg font-bold text-gray-800 mb-4">Column Analysis</h3>
+                                            <div className="space-y-4">
+                                                {masterHeaders.map((header, idx) => {
+                                                    const filledCells = mergedData.filter(row => row[idx] && row[idx].trim()).length;
+                                                    const fillPercentage = (filledCells / mergedData.length * 100).toFixed(1);
+                                                    
+                                                    return (
+                                                        <div key={idx} className="bg-gray-50 p-4 rounded-lg">
+                                                            <div className="flex justify-between items-center mb-2">
+                                                                <span className="font-semibold text-gray-700">{header}</span>
+                                                                <span className="text-sm text-gray-600">
+                                                                    {filledCells}/{mergedData.length} ({fillPercentage}%)
+                                                                </span>
+                                                            </div>
+                                                            <div className="w-full bg-gray-200 rounded-full h-2">
+                                                                <div
+                                                                    className="bg-blue-600 h-2 rounded-full transition-all"
+                                                                    style={{ width: `${fillPercentage}%` }}
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                            
+                                            <div className="mt-6 flex justify-end">
+                                                <button
+                                                    onClick={exportCSV}
+                                                    className="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+                                                >
+                                                    💾 Export Merged CSV
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </>
+                        )}
+
+                        <div className="bg-white rounded-lg shadow-lg p-6">
+                            <h2 className="text-xl font-bold text-gray-800 mb-3">💡 How It Works</h2>
+                            <div className="grid md:grid-cols-2 gap-4">
+                                <div>
+                                    <h3 className="font-semibold text-blue-700 mb-2">📋 Master CSV (Left)</h3>
+                                    <ul className="space-y-1 text-sm text-gray-700">
+                                        <li>• Your existing CSV with custom data</li>
+                                        <li>• Contains summaries, notes, functions</li>
+                                        <li>• All custom columns preserved</li>
+                                        <li>• This is your source of truth</li>
+                                    </ul>
+                                </div>
+                                <div>
+                                    <h3 className="font-semibold text-purple-700 mb-2">📸 Snapshot CSV (Right)</h3>
+                                    <ul className="space-y-1 text-sm text-gray-700">
+                                        <li>• Latest folder structure export</li>
+                                        <li>• Generated from current file system</li>
+                                        <li>• Shows new files and folders</li>
+                                        <li>• Identifies deleted items</li>
+                                    </ul>
+                                </div>
+                                <div>
+                                    <h3 className="font-semibold text-green-700 mb-2">⚡ Auto-Merge Process</h3>
+                                    <ul className="space-y-1 text-sm text-gray-700">
+                                        <li>• Compares both CSVs by file path</li>
+                                        <li>• Adds new items from snapshot</li>
+                                        <li>• Removes deleted items from master</li>
+                                        <li>• Preserves all custom data columns</li>
+                                        <li>• Maps columns by matching headers</li>
+                                    </ul>
+                                </div>
+                                <div>
+                                    <h3 className="font-semibold text-red-700 mb-2">✏️ After Merge</h3>
+                                    <ul className="space-y-1 text-sm text-gray-700">
+                                        <li>• Review merged data in Edit tab</li>
+                                        <li>• Add summaries to new items</li>
+                                        <li>• Edit any cell by clicking it</li>
+                                        <li>• Use Undo/Redo for safety</li>
+                                        <li>• Export updated CSV when ready</li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <div className="mt-6 p-4 bg-yellow-50 border-l-4 border-yellow-400 rounded">
+                                <p className="text-sm text-yellow-800">
+                                    <strong>💡 Pro Tip:</strong> Keep your master CSV updated regularly. 
+                                    Generate a new snapshot CSV whenever your folder structure changes, 
+                                    then merge it here to keep everything in sync!
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        ReactDOM.render(<CSVMerger />, document.getElementById('root'));
+    </script>
+</body>
+</html>

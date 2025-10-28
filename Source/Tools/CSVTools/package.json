@@ -1,0 +1,43 @@
+{
+  "name": "csv-project-map-tools",
+  "version": "1.0.0",
+  "description": "Automated tools for synchronizing project structure with CSV documentation",
+  "type": "module",
+  "scripts": {
+    "update-csv": "node update-csv-workflow.mjs",
+    "sync-files": "node sync-filesystem-to-csv.mjs",
+    "preview": "node preview-changes.mjs",
+    "update-csv-with-coverage": "node update-csv-workflow-with-coverage.mjs",
+    "update-functions": "node update-functions.mjs",
+    "update-order": "node updateOrderOfOperations.mjs",
+    "update-deps": "node updateDependencies.mjs",
+    "update-dataflow": "node updateDataFlow.mjs",
+    "update-loc": "node updateLinesOfCodeCounter.mjs",
+    "update-io": "node updateInputSourcesOutputDestinations.mjs",
+    "update-effects": "node updateSideEffects.mjs",
+    "update-complexity": "node updateCyclomaticComplexity.mjs",
+    "update-execution-context": "node updateExecutionContext.mjs",
+    "update-error-handling": "node updateErrorHandlingCoverage.mjs",
+    "update-features": "node updateFeatures.mjs",
+    "update-coverage": "node updateTestCoverage.mjs",
+    "run-querier": "node Querier.mjs",
+    "export-results": "node Results.mjs",
+    "save-result-1": "node SavedResult1.mjs",
+    "save-result-2": "node SavedResult2.mjs",
+    "save-result-3": "node SavedResult3.mjs",
+    "help": "cat CSV-UPDATE-TOOLS-README.md",
+    "generate-dataset": "node generate-llm-dataset.mjs"
+  },
+  "keywords": [
+    "csv",
+    "documentation",
+    "automation",
+    "file-system",
+    "project-map"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "prettier": "^3.1.0"
+  }
+}
