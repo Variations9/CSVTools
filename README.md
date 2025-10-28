@@ -16,6 +16,10 @@ This is a result of a fervent effort to accomplish just that;  to create a maste
 spreadsheet containing multiple columns that get populated with key data, listing * files and folders, their containing functions, dependencies, tracking, and
 so forth. Additions and vibe coding help from Claude Code / GPT Codex.
 
+Example Spreadsheet viewable at:
+https://docs.google.com/spreadsheets/d/1Kwc429QBrfUCZzyB1BlzLp7wd16pyS14G42Fn7DgMm0/edit?usp=sharing
+
+
 Uses Node.js - ( install separately. )
 
 Instructions for use:
