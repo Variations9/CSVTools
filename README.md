@@ -3,8 +3,7 @@ Master Project Spreadsheet Generator
 
 ============================================================================
 Master Spreadsheet Generator - Create a Spreadsheet of your entire project.
-Authored by Evan, Production Artist in the Studio @ Port Townsend, 
-Additions and vibe coding help from Claude Code / GPT Codex.
+Authored by Evan, Production & Technical Artist in Studio @ Port Townsend, 
 ============================================================================
 
 Adventures in Coding :  Recently, I had this vague notion in mind that when 
@@ -15,8 +14,7 @@ within.
 
 This is a result of a fervent effort to accomplish just that;  to create a master
 spreadsheet containing multiple columns that get populated with key data, listing * files and folders, their containing functions, dependencies, tracking, and
-so forth. 
-
+so forth. Additions and vibe coding help from Claude Code / GPT Codex.
 
 Uses Node.js - ( install separately. )
 
@@ -25,7 +23,6 @@ Place entire project folder within this /Source folder.
 Open a Terminal, and type in the command:
 
 node Source/Tools/CSVTools/update-csv-workflow.mjs
-
 (the update-csv-workflow.mjs is the master orchestrator script.)
 
 If you want to run the command to produce the full result in a workflow log, use this command:
@@ -35,7 +32,7 @@ node Source/Tools/CSVTools/update-csv-workflow.mjs 2>&1 | tee Source/Tools/logs/
 After Generating the new .csv, you can rename it, and replace it with this existing
 /Source/ProjectMap/SourceFolder.csv.
 
-( This file is my current example .csv spreadsheet for an estimator tool project I've been working on at work.) 
+( This file is my current example .csv spreadsheet for a masterful estimator tool project I've been working on lately, examples upon request.) 
 
 View Spreadsheets by importing the .csv into Google Sheets.
 Additional questions?  call / email me!
