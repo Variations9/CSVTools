@@ -4,6 +4,7 @@ Master Project Spreadsheet Generator
 ============================================================================
 Master Spreadsheet Generator - Create a Spreadsheet of your entire project.
 Developed by E. Harrison, Production & Technical Artist in Studio @ Port Townsend, 
+( Bloviations and vibe-coding from a.i. Claude code & ChatGPT Codex. )
 ============================================================================
 
 Adventures in Coding :  Recently, I had this vague notion in mind that when 
@@ -13,7 +14,7 @@ project.  Columns for each script file gets populated with entries for such as l
 
 This is a result of a fervent effort to accomplish just that;  to create a master
 spreadsheet containing multiple columns that get populated with key data, listing files and folders, their containing functions, dependencies, tracking, and
-so forth. Bloviations and vibe-coding from a.i. Claude code & ChatGPT Codex.
+so forth. 
 
 The Spreadsheet of this project, is viewable at:
 https://docs.google.com/spreadsheets/d/1Q9vF2L3K6D2Ptg94kgfpupGikGkF27CcwyihWiLbhH8/edit?usp=sharing
