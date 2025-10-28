@@ -33,11 +33,11 @@ Place entire project folder within this /Source folder.
 Open a Terminal, and type in the command:
 
 node Source/Tools/CSVTools/update-csv-workflow.mjs
-(the update-csv-workflow.mjs is the master orchestrator script.)
 
+(the update-csv-workflow.mjs is the master orchestrator script.)
 If you want to run the command to produce the full result in a workflow log, use this command:
 
-node Source/Tools/CSVTools/update-csv-workflow.mjs 2>&1 | tee Source/Tools/logs/workflow-$(date +%Y%m%d-%H%M%S).log
+node Source/Tools/CSVTools/update-csv-workflow.mjs 2>&1 | tee Documentation/logs/workflow-$(date +%Y%m%d-%H%M%S).log
 
 After Generating the new .csv, you can rename it, and replace it with this existing
 /Source/ProjectMap/SourceFolder.csv.

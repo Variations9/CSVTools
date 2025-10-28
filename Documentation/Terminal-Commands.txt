@@ -1,0 +1,7 @@
+npm run test:coverage
+
+node Source/Tools/CSVTools/update-csv-workflow.mjs
+
+node Source/Tools/CSVTools/update-csv-workflow.mjs 2>&1 | tee Documentation/logs/workflow-$(date +%Y%m%d-%H%M%S).log
+
+
