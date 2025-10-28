@@ -15,7 +15,11 @@ This is a result of a fervent effort to accomplish just that;  to create a maste
 spreadsheet containing multiple columns that get populated with key data, listing files and folders, their containing functions, dependencies, tracking, and
 so forth. Bloviations and vibe-coding from a.i. Claude code & ChatGPT Codex.
 
-Example Spreadsheet viewable at:
+The Spreadsheet of this project, is viewable at:
+https://docs.google.com/spreadsheets/d/1Kwc429QBrfUCZzyB1BlzLp7wd16pyS14G42Fn7DgMm0/edit?usp=sharing
+
+
+Another larger Example Spreadsheet is viewable at:
 https://docs.google.com/spreadsheets/d/1Kwc429QBrfUCZzyB1BlzLp7wd16pyS14G42Fn7DgMm0/edit?usp=sharing
 
 
