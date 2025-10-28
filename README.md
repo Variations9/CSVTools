@@ -3,24 +3,25 @@ Master Project Spreadsheet Generator
 
 ============================================================================
 Master Spreadsheet Generator - Create a Spreadsheet of your entire project.
-Authored by Evan, Production & Technical Artist in Studio @ Port Townsend, 
+Developed by E. Harrison, Production & Technical Artist in Studio @ Port Townsend, 
 ============================================================================
 
 Adventures in Coding :  Recently, I had this vague notion in mind that when 
 developing programs, what I really ought to do is to automate a spreadsheet 
-generator tool, such that a spreadsheet will track folders and scripts in my
-project, that I'd be able to track, chart, map, and eventually diagnose issues
-within.
+generator tool, such that a spreadsheet will track all folders and script files in my
+project.  Columns for each script file gets populated with entries for such as listing functions, inputs/outputs, associated dependencies and more. I'd be able to use this csv file as a map and tracking tool for additional reference and discovery.
 
 This is a result of a fervent effort to accomplish just that;  to create a master
-spreadsheet containing multiple columns that get populated with key data, listing * files and folders, their containing functions, dependencies, tracking, and
-so forth. Additions and vibe coding help from Claude Code / GPT Codex.
+spreadsheet containing multiple columns that get populated with key data, listing files and folders, their containing functions, dependencies, tracking, and
+so forth. Bloviations and vibe-coding from a.i. Claude code & ChatGPT Codex.
 
 Example Spreadsheet viewable at:
 https://docs.google.com/spreadsheets/d/1Kwc429QBrfUCZzyB1BlzLp7wd16pyS14G42Fn7DgMm0/edit?usp=sharing
 
 
-Uses Node.js - ( install separately. )
+Uses Node.js - (ensure that node.js is installed.)
+
+Supported File types: tracks all files / folders, and populates key columns with data from: .js, .json, .html, .cs, .py, .css, and .mjs file types.
 
 Instructions for use:
 Place entire project folder within this /Source folder.
