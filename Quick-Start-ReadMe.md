@@ -3,20 +3,16 @@ Master Project Spreadsheet Generator
 
 ============================================================================
 Master Spreadsheet Generator - Create a Spreadsheet of your entire project.
-Developed by (Pseudonym 'vibe-coder' Name), Production & Technical Artist, 
-Port Townsend, WA.
+Developed by Citizen Lazlo, Production & Technical Artist, Port Townsend, WA.
 
-(Development, Bloviations, and vibe-coding conducted by a: the conductor, and b: a.i. )
-
-The estimated rates of effectiveness range from 10% to 45% effective!
-The rates of gaining ground through Machine Learning, is much improving.
-This Snapshot is 99.9 % Effective... I think!
+(Development, Bloviations, and vibe-coding conducted with the help of a.i. )
 ============================================================================
 
 Adventures in Coding :  Recently, I had this vague notion in mind that when 
 developing programs, what I really ought to do is to automate a spreadsheet 
 generator tool, such that a spreadsheet will track all folders and script files in my
-project.  Columns for each script file gets populated with entries for such as listing functions, inputs/outputs, associated dependencies and more. I'd be able to use this csv file as a map and tracking tool for additional reference and discovery.
+project.  Columns for each script file gets populated with entries for such as listing functions, inputs/outputs, associated dependencies and more. I'd be able to use this csv file as a map and tracking tool for additional reference and discovery, and possibly use it
+as a source of reference to help train LLMs.
 
 This is a result of a fervent effort to accomplish just that;  to create a master
 spreadsheet containing multiple columns that get populated with key data, listing files and folders, their containing functions, dependencies, tracking, and
@@ -38,6 +34,10 @@ Instructions for use:
 Place entire project folder within this /Source folder.
 Open a Terminal, and type in the command:
 
+npm install
+
+and then, 
+
 node Source/Tools/CSVTools/update-csv-workflow.mjs
 
 (the update-csv-workflow.mjs is the master orchestrator script.)
@@ -52,4 +52,3 @@ After Generating the new .csv, you can rename it, and replace it with this exist
 
 View Spreadsheets by importing the .csv into Google Sheets.
 Additional questions?  call / email me!
-E.H.

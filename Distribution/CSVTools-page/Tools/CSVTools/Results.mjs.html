@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formatted Code - JavaScript</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', Courier, monospace;
+            background: #ffffff;
+            padding: 3rem;
+            color: #000000;
+            line-height: 1.6;
+            font-size: 12pt;
+            font-weight: bold;
+            font-style: normal;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: #ffffff;
+        }
+
+        .code-container {
+            background: #ffffff;
+            padding: 0;
+        }
+
+        .code-line {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            margin-bottom: 0.1rem;
+        }
+
+        .comment {
+            color: #228b22;
+            font-size: 11pt;
+            font-family: 'Bookman Old Style', serif;
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        .keyword {
+            color: #0000ff;
+            font-weight: 600;
+        }
+
+        .string {
+            color: #a31515;
+        }
+
+        .number {
+            color: #098658;
+        }
+
+        .function {
+            color: #795e26;
+        }
+
+        .operator {
+            color: #000000;
+        }
+
+        .type {
+            color: #267f99;
+        }
+
+        .variable {
+            color: #001080;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .code-container {
+                border: none;
+                padding: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="code-container">
+            <div class="code-line"><span class="comment">==========================================================================================</span></div>
+            <div class="code-line"><span class="comment">QUERIER RESULTS REPORTER</span></div>
+            <div class="code-line"><span class="comment">==========================================================================================</span></div>
+            <div class="code-line"><span class="keyword">import</span><span class="operator"> </span><span class="variable">fs</span><span class="operator"> </span><span class="keyword">from</span><span class="operator"> </span><span class="string">&#039;node:fs/promises&#039;</span><span class="operator">;</span></div>
+            <div class="code-line"><span class="keyword">import</span><span class="operator"> </span><span class="variable">path</span><span class="operator"> </span><span class="keyword">from</span><span class="operator"> </span><span class="string">&#039;node:path&#039;</span><span class="operator">;</span></div>
+            <div class="code-line"><span class="keyword">import</span><span class="operator"> </span><span class="operator">{</span><span class="operator"> </span><span class="variable">loadCsvTable</span><span class="operator">,</span><span class="operator"> </span><span class="variable">writeCsvTable</span><span class="operator">,</span><span class="operator"> </span><span class="variable">ensureColumns</span><span class="operator">,</span><span class="operator"> </span><span class="variable">createValueAccessor</span><span class="operator">,</span><span class="operator"> </span><span class="variable">buildRowPath</span><span class="operator"> </span><span class="operator">}</span></div>
+            <div class="code-line"><span class="keyword">from</span><span class="operator"> </span><span class="string">&#039;./lib/table-helpers.mjs&#039;</span><span class="operator">;</span></div>
+            <div class="code-line"></div>
+            <div class="code-line"><span class="comment">==========================================================================================</span></div>
+            <div class="code-line"><span class="comment">SECTION 1: CONSTANTS AND PATH UTILITIES</span></div>
+            <div class="code-line"><span class="comment">==========================================================================================</span></div>
+            <div class="code-line">&nbsp;</div>
+            <div class="code-line"><span class="comment">Required CSV column headers that must exist to export and optionally clear results.</span></div>
+            <div class="code-line"><span class="keyword">const</span><span class="operator"> </span><span class="type">REQUIRED_COLUMNS</span><span class="operator"> </span><span class="operator">=</span><span class="operator"> </span><span class="operator">[</span></div>
+            <div class="code-line"><span class="operator"> </span><span class="operator"> </span><span class="string">&#039;DEBUGGER QUERY&#039;</span><span class="operator">,</span></div>
+            <div class="code-line"><span class="operator"> </span><span class="operator"> </span><span class="string">&#039;QUERY RESULTS&#039;</span><span class="operator">,</span></div>
+            <div class="code-line"><span class="operator"> </span><span class="operator"> </span><span class="string">&#039;SAVED RESULT 1&#039;</span><span class="operator">,</span></div>
+            <div class="code-line"><span class="operator"> </span><span class="operator"> </span><span class="string">&#039;SAVED RESULT 2&#039;</span><span class="operator">,</span></div>
+            <div class="code-line"><span class="operator"> </span><span class="operator"> </span><span class="string">&#039;SAVED RESULT 3&#039;</span><span class="operator">,</span></div>
+            <div class="code-line"><span class="operator">]</span><span class="operator">;</span></div>
+            <div class="code-line"></div>
+            <div class="code-line"><span class="comment">Resolve the current workspace root and target directory where log exports are written.</span></div>
+            <div class="code-line"><span class="keyword">const</span><span class="operator"> </span><span class="variable">workspaceRoot</span><span class="operator"> </span><span class="operator">=</span><span class="operator"> </span><span class="variable">process</span><span class="operator">.</span><span class="function">cwd</span><span class="operator">(</span><span class="operator">)</span><span class="operator">;</span></div>
+            <div class="code-line"><span class="keyword">const</span><span class="operator"> </span><span class="variable">logDir</span><span class="operator"> </span><span class="operator">=</span><span class="operator"> </span><span class="variable">path</span><span class="operator">.</span><span class="function">join</span><span class="operator">(</span><span class="variable">workspaceRoot</span><span class="operator">,</span><span class="operator"> </span><span class="string">&#039;Source/Tools/logs&#039;</span><span class="operator">)</span><span class="operator">;</span></div>
+            <div class="code-line"></div>
+            <div class="code-line"><span class="comment">==========================================================================================</span></div>
+            <div class="code-line"><span class="comment">SECTION 2: FILESYSTEM HELPERS</span></div>
+            <div class="code-line"><span class="comment">==========================================================================================</span></div>
+            <div class="code-line">&nbsp;</div>
+            <div class="code-line"><span class="comment">ensureLogDirectory</span></div>
+            <div class="code-line">&nbsp;</div>
+            <div class="code-line"><span class="comment">Purpose: Creates the log output directory if it does not already exist.</span></div>
+            <div class="code-line">&nbsp;</div>
+            <div class="code-line"><span class="comment">Behavior: - Delegates to fs.mkdir with recursive mode to avoid errors when the path</span></div>
+            <div class="code-line"><span class="comment">already exists - Guarantees that downstream write operations have a destination directory</span></div>
+            <div class="code-line">&nbsp;</div>
+            <div class="code-line"><span class="comment">Parameters: none</span></div>
+            <div class="code-line">&nbsp;</div>
+            <div class="code-line"><span class="comment">Returns: Promise&lt;void&gt;</span></div>
+            <div class="code-line">&nbsp;</div>
+            <div class="code-line"><span class="comment">Key Features: - Idempotent directory setup leveraging the Node.js recursive mkdir flag -</span></div>
+            <div class="code-line"><span class="comment">Keeps I/O helpers isolated for reuse across future reporters</span></div>
+            <div class="code-line"><span class="keyword">async</span><span class="operator"> </span><span class="keyword">function</span><span class="operator"> </span><span class="function">ensureLogDirectory</span><span class="operator">(</span><span class="operator">)</span><span class="operator"> </span><span class="operator">{</span></div>
+            <div class="code-line"><span class="operator"> </span><span class="operator"> </span><span class="keyword">await</span><span class="operator"> </span><span class="variable">fs</span><span class="operator">.</span><span class="function">mkdir</span><span class="operator">(</span><span class="variable">logDir</span><span class="operator">,</span><span class="operator"> </span><span class="operator">{</span><span class="operator"> </span><span class="variable">recursive</span><span class="operator">:</span><span class="operator"> </span><span class="keyword">true</span><span class="operator"> </span><span class="operator">}</span><span class="operator">)</span><span class="operator">;</span></div>
+            <div class="code-line"><span class="operator">}</span></div>
+            <div class="code-line"></div>
+            <div class="code-line"></div>
+            <div class="code-line"><span class="comment">formatEntry</span></div>
+            <div class="code-line">&nbsp;</div>
+            <div class="code-line"><span class="comment">Purpose: Generates a human-readable log snippet for a single CSV row.</span></div>
+            <div class="code-line">&nbsp;</div>
+            <div class="code-line"><span class="comment">Behavior: - Builds an array of string lines containing file path, query (when present),</span></div>
+            <div class="code-line"><span class="comment">and result content - Inserts a separator line to keep individual entries distinct inside</span></div>
+            <div class="code-line"><span class="comment">the log file</span></div>
+            <div class="code-line">&nbsp;</div>
+            <div class="code-line"><span class="comment">Parameters: - rowPath: string - query: string - result: string</span></div>
+            <div class="code-line">&nbsp;</div>
+            <div class="code-line"><span class="comment">Returns: string formatted for aggregation into the log body</span></div>
+            <div class="code-line">&nbsp;</div>
+            <div class="code-line"><span class="comment">Key Features: - Keeps log generation deterministic and easy to parse manually - Avoids</span></div>
+            <div class="code-line"><span class="comment">trailing whitespace by constructing the message line by line</span></div>
+            <div class="code-line"><span class="keyword">function</span><span class="operator"> </span><span class="function">formatEntry</span><span class="operator">(</span><span class="variable">rowPath</span><span class="operator">,</span><span class="operator"> </span><span class="variable">query</span><span class="operator">,</span><span class="operator"> </span><span class="variable">result</span><span class="operator">)</span><span class="operator"> </span><span class="operator">{</span></div>
+            <div class="code-line"><span class="operator"> </span><span class="operator"> </span><span class="keyword">const</span><span class="operator"> </span><span class="variable">lines</span><span class="operator"> </span><span class="operator">=</span><span class="operator"> </span><span class="operator">[</span><span class="operator">]</span><span class="operator">;</span></div>
+            <div class="code-line"><span class="operator"> </span><span class="operator"> </span><span class="variable">lines</span><span class="operator">.</span><span class="function">push</span><span class="operator">(</span><span class="string">`File: ${rowPath}`</span><span class="operator">)</span><span class="operator">;</span></div>
+            <div class="code-line"><span class="operator"> </span><span class="operator"> </span><span class="keyword">if</span><span class="operator"> </span><span class="operator">(</span><span class="variable">query</span><span class="operator">)</span><span class="operator"> </span><span class="operator">{</span></div>
+            <div class="code-line"><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="variable">lines</span><span class="operator">.</span><span class="function">push</span><span class="operator">(</span><span class="string">`Query: ${query}`</span><span class="operator">)</span><span class="operator">;</span></div>
+            <div class="code-line"><span class="operator"> </span><span class="operator"> </span><span class="operator">}</span></div>
+            <div class="code-line"><span class="operator"> </span><span class="operator"> </span><span class="variable">lines</span><span class="operator">.</span><span class="function">push</span><span class="operator">(</span><span class="string">&#039;Result:&#039;</span><span class="operator">)</span><span class="operator">;</span></div>
+            <div class="code-line"><span class="operator"> </span><span class="operator"> </span><span class="variable">lines</span><span class="operator">.</span><span class="function">push</span><span class="operator">(</span><span class="variable">result</span><span class="operator">)</span><span class="operator">;</span></div>
+            <div class="code-line"><span class="operator"> </span><span class="operator"> </span><span class="variable">lines</span><span class="operator">.</span><span class="function">push</span><span class="operator">(</span><span class="string">&#039;---&#039;</span><span class="operator">)</span><span class="operator">;</span></div>
+            <div class="code-line"><span class="operator"> </span><span class="operator"> </span><span class="keyword">return</span><span class="operator"> </span><span class="variable">lines</span><span class="operator">.</span><span class="function">join</span><span class="operator">(</span><span class="string">&#039;\n&#039;</span><span class="operator">)</span><span class="operator">;</span></div>
+            <div class="code-line"><span class="operator">}</span></div>
+            <div class="code-line"></div>
+            <div class="code-line"><span class="comment">==========================================================================================</span></div>
+            <div class="code-line"><span class="comment">SECTION 3: MAIN EXECUTION FLOW</span></div>
+            <div class="code-line"><span class="comment">==========================================================================================</span></div>
+            <div class="code-line">&nbsp;</div>
+            <div class="code-line"><span class="comment">main</span></div>
+            <div class="code-line">&nbsp;</div>
+            <div class="code-line"><span class="comment">Purpose: Exports populated QUERY RESULTS cells to timestamped log files and optionally</span></div>
+            <div class="code-line"><span class="comment">clears the source cells.</span></div>
+            <div class="code-line">&nbsp;</div>
+            <div class="code-line"><span class="comment">Behavior: - Detects the --clear flag to decide whether Column R should be emptied after</span></div>
+            <div class="code-line"><span class="comment">export - Loads the shared CSV dataset and ensures required columns exist (creating them</span></div>
+            <div class="code-line"><span class="comment">when absent) - Scans each row for populated QUERY RESULTS entries and captures contextual</span></div>
+            <div class="code-line"><span class="comment">metadata - Writes a timestamped log file containing formatted entries - Optionally clears</span></div>
+            <div class="code-line"><span class="comment">the source cells and persists the mutated CSV when --clear is provided</span></div>
+            <div class="code-line">&nbsp;</div>
+            <div class="code-line"><span class="comment">Parameters: none (uses process.argv for configuration)</span></div>
+            <div class="code-line">&nbsp;</div>
+            <div class="code-line"><span class="comment">Returns: Promise&lt;void&gt;</span></div>
+            <div class="code-line">&nbsp;</div>
+            <div class="code-line"><span class="comment">Key Features: - Centralized CLI entry point for result archival - Respects existing helper</span></div>
+            <div class="code-line"><span class="comment">utilities for CSV manipulation and path resolution - Provides progress output for operator</span></div>
+            <div class="code-line"><span class="comment">feedback</span></div>
+            <div class="code-line"><span class="keyword">async</span><span class="operator"> </span><span class="keyword">function</span><span class="operator"> </span><span class="function">main</span><span class="operator">(</span><span class="operator">)</span><span class="operator"> </span><span class="operator">{</span></div>
+            <div class="code-line"><span class="operator"> </span><span class="operator"> </span><span class="keyword">const</span><span class="operator"> </span><span class="variable">clearAfterExport</span><span class="operator"> </span><span class="operator">=</span><span class="operator"> </span><span class="variable">process</span><span class="operator">.</span><span class="variable">argv</span><span class="operator">.</span><span class="function">includes</span><span class="operator">(</span><span class="string">&#039;--clear&#039;</span><span class="operator">)</span><span class="operator">;</span></div>
+            <div class="code-line"><span class="operator"> </span><span class="operator"> </span><span class="variable">console</span><span class="operator">.</span><span class="function">log</span><span class="operator">(</span><span class="string">&#039;============================================================&#039;</span><span class="operator">)</span><span class="operator">;</span></div>
+            <div class="code-line"><span class="operator"> </span><span class="operator"> </span><span class="variable">console</span><span class="operator">.</span><span class="function">log</span><span class="operator">(</span><span class="string">&#039;Querier Results Reporter (Column R snapshot)&#039;</span><span class="operator">)</span><span class="operator">;</span></div>
+            <div class="code-line"><span class="operator"> </span><span class="operator"> </span><span class="variable">console</span><span class="operator">.</span><span class="function">log</span><span class="operator">(</span><span class="string">&#039;============================================================\n&#039;</span><span class="operator">)</span><span class="operator">;</span></div>
+            <div class="code-line"></div>
+            <div class="code-line"><span class="operator"> </span><span class="operator"> </span><span class="keyword">const</span><span class="operator"> </span><span class="operator">{</span><span class="operator"> </span><span class="variable">csvPath</span><span class="operator">,</span><span class="operator"> </span><span class="variable">headers</span><span class="operator">,</span><span class="operator"> </span><span class="variable">rows</span><span class="operator"> </span><span class="operator">}</span><span class="operator"> </span><span class="operator">=</span><span class="operator"> </span><span class="keyword">await</span><span class="operator"> </span><span class="function">loadCsvTable</span><span class="operator">(</span><span class="operator">)</span><span class="operator">;</span></div>
+            <div class="code-line"><span class="operator"> </span><span class="operator"> </span><span class="keyword">const</span><span class="operator"> </span><span class="variable">columnIndices</span><span class="operator"> </span><span class="operator">=</span><span class="operator"> </span><span class="function">ensureColumns</span><span class="operator">(</span><span class="variable">headers</span><span class="operator">,</span><span class="operator"> </span><span class="variable">rows</span><span class="operator">,</span><span class="operator"> </span><span class="type">REQUIRED_COLUMNS</span><span class="operator">)</span><span class="operator">;</span></div>
+            <div class="code-line"><span class="operator"> </span><span class="operator"> </span><span class="keyword">const</span><span class="operator"> </span><span class="variable">typeIndex</span><span class="operator"> </span><span class="operator">=</span><span class="operator"> </span><span class="variable">headers</span><span class="operator">.</span><span class="function">findIndex</span><span class="operator">(</span><span class="operator">(</span><span class="variable">header</span><span class="operator">)</span><span class="operator"> </span><span class="operator">=</span><span class="operator">&gt;</span><span class="operator"> </span><span class="variable">header</span><span class="operator">.</span><span class="function">trim</span><span class="operator">(</span><span class="operator">)</span><span class="operator">.</span><span class="function">toUpperCase</span><span class="operator">(</span><span class="operator">)</span><span class="operator"> </span><span class="operator">=</span><span class="operator">=</span><span class="operator">=</span><span class="operator"> </span><span class="string">&#039;TYPE&#039;</span><span class="operator">)</span><span class="operator">;</span></div>
+            <div class="code-line"><span class="operator"> </span><span class="operator"> </span><span class="keyword">const</span><span class="operator"> </span><span class="variable">getValue</span><span class="operator"> </span><span class="operator">=</span><span class="operator"> </span><span class="function">createValueAccessor</span><span class="operator">(</span><span class="variable">headers</span><span class="operator">)</span><span class="operator">;</span></div>
+            <div class="code-line"></div>
+            <div class="code-line"><span class="operator"> </span><span class="operator"> </span><span class="keyword">const</span><span class="operator"> </span><span class="variable">entries</span><span class="operator"> </span><span class="operator">=</span><span class="operator"> </span><span class="operator">[</span><span class="operator">]</span><span class="operator">;</span></div>
+            <div class="code-line"></div>
+            <div class="code-line"><span class="operator"> </span><span class="operator"> </span><span class="variable">rows</span><span class="operator">.</span><span class="function">forEach</span><span class="operator">(</span><span class="operator">(</span><span class="variable">row</span><span class="operator">)</span><span class="operator"> </span><span class="operator">=</span><span class="operator">&gt;</span><span class="operator"> </span><span class="operator">{</span></div>
+            <div class="code-line"><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="keyword">const</span><span class="operator"> </span><span class="variable">result</span><span class="operator"> </span><span class="operator">=</span><span class="operator"> </span><span class="operator">(</span><span class="variable">row</span><span class="operator">[</span><span class="variable">columnIndices</span><span class="operator">[</span><span class="string">&#039;QUERY RESULTS&#039;</span><span class="operator">]</span><span class="operator">]</span><span class="operator"> </span><span class="operator">?</span><span class="operator">?</span><span class="operator"> </span><span class="string">&#039;&#039;</span><span class="operator">)</span><span class="operator">.</span><span class="function">trim</span><span class="operator">(</span><span class="operator">)</span><span class="operator">;</span></div>
+            <div class="code-line"><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="keyword">if</span><span class="operator"> </span><span class="operator">(</span><span class="operator">!</span><span class="variable">result</span><span class="operator">)</span><span class="operator"> </span><span class="operator">{</span></div>
+            <div class="code-line"><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="keyword">return</span><span class="operator">;</span></div>
+            <div class="code-line"><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator">}</span></div>
+            <div class="code-line"><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="keyword">const</span><span class="operator"> </span><span class="variable">query</span><span class="operator"> </span><span class="operator">=</span><span class="operator"> </span><span class="operator">(</span><span class="variable">row</span><span class="operator">[</span><span class="variable">columnIndices</span><span class="operator">[</span><span class="string">&#039;DEBUGGER QUERY&#039;</span><span class="operator">]</span><span class="operator">]</span><span class="operator"> </span><span class="operator">?</span><span class="operator">?</span><span class="operator"> </span><span class="string">&#039;&#039;</span><span class="operator">)</span><span class="operator">.</span><span class="function">trim</span><span class="operator">(</span><span class="operator">)</span><span class="operator">;</span></div>
+            <div class="code-line"><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="keyword">const</span><span class="operator"> </span><span class="variable">rowPath</span><span class="operator"> </span><span class="operator">=</span><span class="operator"> </span><span class="function">buildRowPath</span><span class="operator">(</span><span class="variable">row</span><span class="operator">,</span><span class="operator"> </span><span class="variable">typeIndex</span><span class="operator">)</span><span class="operator">;</span></div>
+            <div class="code-line"><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="variable">entries</span><span class="operator">.</span><span class="function">push</span><span class="operator">(</span><span class="operator">{</span><span class="operator"> </span><span class="variable">row</span><span class="operator">,</span><span class="operator"> </span><span class="variable">query</span><span class="operator">,</span><span class="operator"> </span><span class="variable">result</span><span class="operator">,</span><span class="operator"> </span><span class="variable">rowPath</span><span class="operator"> </span><span class="operator">}</span><span class="operator">)</span><span class="operator">;</span></div>
+            <div class="code-line"><span class="operator"> </span><span class="operator"> </span><span class="operator">}</span><span class="operator">)</span><span class="operator">;</span></div>
+            <div class="code-line"></div>
+            <div class="code-line"><span class="operator"> </span><span class="operator"> </span><span class="keyword">if</span><span class="operator"> </span><span class="operator">(</span><span class="variable">entries</span><span class="operator">.</span><span class="variable">length</span><span class="operator"> </span><span class="operator">=</span><span class="operator">=</span><span class="operator">=</span><span class="operator"> </span><span class="number">0</span><span class="operator">)</span><span class="operator"> </span><span class="operator">{</span></div>
+            <div class="code-line"><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="variable">console</span><span class="operator">.</span><span class="function">log</span><span class="operator">(</span><span class="string">&#039;No populated QUERY RESULTS cells were found. Nothing to export.&#039;</span><span class="operator">)</span><span class="operator">;</span></div>
+            <div class="code-line"><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="keyword">return</span><span class="operator">;</span></div>
+            <div class="code-line"><span class="operator"> </span><span class="operator"> </span><span class="operator">}</span></div>
+            <div class="code-line"></div>
+            <div class="code-line"><span class="operator"> </span><span class="operator"> </span><span class="keyword">await</span><span class="operator"> </span><span class="function">ensureLogDirectory</span><span class="operator">(</span><span class="operator">)</span><span class="operator">;</span></div>
+            <div class="code-line"><span class="operator"> </span><span class="operator"> </span><span class="keyword">const</span><span class="operator"> </span><span class="variable">timestamp</span><span class="operator"> </span><span class="operator">=</span><span class="operator"> </span><span class="keyword">new</span><span class="operator"> </span><span class="function">Date</span><span class="operator">(</span><span class="operator">)</span><span class="operator">.</span><span class="function">toISOString</span><span class="operator">(</span><span class="operator">)</span><span class="operator">.</span><span class="function">replace</span><span class="operator">(</span><span class="operator">/</span><span class="operator">[</span><span class="operator">:</span><span class="operator">.</span><span class="operator">]</span><span class="operator">/</span><span class="variable">g</span><span class="operator">,</span><span class="operator"> </span><span class="string">&#039;-&#039;</span><span class="operator">)</span><span class="operator">;</span></div>
+            <div class="code-line"><span class="operator"> </span><span class="operator"> </span><span class="keyword">const</span><span class="operator"> </span><span class="variable">logPath</span><span class="operator"> </span><span class="operator">=</span><span class="operator"> </span><span class="variable">path</span><span class="operator">.</span><span class="function">join</span><span class="operator">(</span><span class="variable">logDir</span><span class="operator">,</span><span class="operator"> </span><span class="string">`querier-results-${timestamp}.log`</span><span class="operator">)</span><span class="operator">;</span></div>
+            <div class="code-line"><span class="operator"> </span><span class="operator"> </span><span class="keyword">const</span><span class="operator"> </span><span class="variable">logBody</span><span class="operator"> </span><span class="operator">=</span><span class="operator"> </span><span class="variable">entries</span><span class="operator">.</span><span class="function">map</span><span class="operator">(</span><span class="operator">(</span><span class="variable">entry</span><span class="operator">)</span><span class="operator"> </span><span class="operator">=</span><span class="operator">&gt;</span><span class="operator"> </span><span class="function">formatEntry</span><span class="operator">(</span><span class="variable">entry</span><span class="operator">.</span><span class="variable">rowPath</span><span class="operator">,</span><span class="operator"> </span><span class="variable">entry</span><span class="operator">.</span><span class="variable">query</span><span class="operator">,</span><span class="operator"> </span><span class="variable">entry</span><span class="operator">.</span></div>
+            <div class="code-line"><span class="operator"> </span><span class="operator"> </span><span class="variable">result</span><span class="operator">)</span><span class="operator">)</span><span class="operator">.</span><span class="function">join</span><span class="operator">(</span><span class="string">&#039;\n&#039;</span><span class="operator">)</span><span class="operator">;</span></div>
+            <div class="code-line"><span class="operator"> </span><span class="operator"> </span><span class="keyword">await</span><span class="operator"> </span><span class="variable">fs</span><span class="operator">.</span><span class="function">writeFile</span><span class="operator">(</span><span class="variable">logPath</span><span class="operator">,</span><span class="operator"> </span><span class="variable">logBody</span><span class="operator">,</span><span class="operator"> </span><span class="string">&#039;utf8&#039;</span><span class="operator">)</span><span class="operator">;</span></div>
+            <div class="code-line"></div>
+            <div class="code-line"><span class="operator"> </span><span class="operator"> </span><span class="variable">console</span><span class="operator">.</span><span class="function">log</span><span class="operator">(</span><span class="string">`Exported ${entries.length} result(s) to ${path.relative(process.cwd(),</span></div>
+            <div class="code-line"><span class="operator"> </span><span class="operator"> </span><span class="variable">logPath</span><span class="operator">)</span><span class="operator">}</span><span class="operator">.</span><span class="string">`);</span></div>
+            <div class="code-line"></div>
+            <div class="code-line"><span class="operator"> </span><span class="operator"> </span><span class="keyword">if</span><span class="operator"> </span><span class="operator">(</span><span class="variable">clearAfterExport</span><span class="operator">)</span><span class="operator"> </span><span class="operator">{</span></div>
+            <div class="code-line"><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="variable">entries</span><span class="operator">.</span><span class="function">forEach</span><span class="operator">(</span><span class="operator">(</span><span class="variable">entry</span><span class="operator">)</span><span class="operator"> </span><span class="operator">=</span><span class="operator">&gt;</span><span class="operator"> </span><span class="operator">{</span></div>
+            <div class="code-line"><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="variable">entry</span><span class="operator">.</span><span class="variable">row</span><span class="operator">[</span><span class="variable">columnIndices</span><span class="operator">[</span><span class="string">&#039;QUERY RESULTS&#039;</span><span class="operator">]</span><span class="operator">]</span><span class="operator"> </span><span class="operator">=</span><span class="operator"> </span><span class="string">&#039;&#039;</span><span class="operator">;</span></div>
+            <div class="code-line"><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator">}</span><span class="operator">)</span><span class="operator">;</span></div>
+            <div class="code-line"><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="keyword">await</span><span class="operator"> </span><span class="function">writeCsvTable</span><span class="operator">(</span><span class="variable">csvPath</span><span class="operator">,</span><span class="operator"> </span><span class="variable">headers</span><span class="operator">,</span><span class="operator"> </span><span class="variable">rows</span><span class="operator">)</span><span class="operator">;</span></div>
+            <div class="code-line"><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="variable">console</span><span class="operator">.</span><span class="function">log</span><span class="operator">(</span><span class="string">&#039;Cleared Column R after exporting.&#039;</span><span class="operator">)</span><span class="operator">;</span></div>
+            <div class="code-line"><span class="operator"> </span><span class="operator"> </span><span class="operator">}</span></div>
+            <div class="code-line"><span class="operator">}</span></div>
+            <div class="code-line"></div>
+            <div class="code-line"><span class="comment">Trigger the CLI and surface errors with non-zero exit codes when failures occur.</span></div>
+            <div class="code-line"><span class="function">main</span><span class="operator">(</span><span class="operator">)</span><span class="operator">.</span><span class="keyword">catch</span><span class="operator">(</span><span class="operator">(</span><span class="variable">error</span><span class="operator">)</span><span class="operator"> </span><span class="operator">=</span><span class="operator">&gt;</span><span class="operator"> </span><span class="operator">{</span></div>
+            <div class="code-line"><span class="operator"> </span><span class="operator"> </span><span class="variable">console</span><span class="operator">.</span><span class="function">error</span><span class="operator">(</span><span class="string">&#039;Results reporter failed:&#039;</span><span class="operator">,</span><span class="operator"> </span><span class="variable">error</span><span class="operator">.</span><span class="variable">message</span><span class="operator">)</span><span class="operator">;</span></div>
+            <div class="code-line"><span class="operator"> </span><span class="operator"> </span><span class="variable">process</span><span class="operator">.</span><span class="function">exit</span><span class="operator">(</span><span class="number">1</span><span class="operator">)</span><span class="operator">;</span></div>
+            <div class="code-line"><span class="operator">}</span><span class="operator">)</span><span class="operator">;</span></div>
+            <div class="code-line"></div>
+        </div>
+    </div>
+</body>
+</html>
