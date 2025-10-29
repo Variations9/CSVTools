@@ -99,7 +99,9 @@ const LANGUAGE_BY_EXTENSION = {
     '.css': 'css',
     '.json': 'json',
     '.mjs': 'javascript',
-    '.cjs': 'javascript'
+    '.cjs': 'javascript',
+    '.csv': 'json',
+    '.md': 'html'
 };
 
 const LANGUAGE_LABELS = {
@@ -118,6 +120,11 @@ const SKIP_TOP_LEVEL_DIRS = new Set(['node_modules', 'coverage', 'Mirror of Plug
 const SKIP_FILE_PATTERNS = [/^\./, /~$/, /\.bak$/]; // Skip hidden files, temp files, backups
 const DEFAULT_MAX_WIDTH = 90;
 const DEFAULT_MAX_SOURCE_LENGTH = 1_000_000;
+const LARGE_FILE_PLAIN_TEXT_THRESHOLD = 5_000_000;
+const MAX_SOURCE_LENGTH_BY_EXTENSION = new Map([
+    ['.json', 100_000_000],
+    ['.csv', 20_000_000]
+]);
 
 function toAnchorId(text, index) {
     const base = text
@@ -178,6 +185,514 @@ function shouldSkipFile(fileName) {
 
 function shouldSkipDirectory(dirName) {
     return SKIP_TOP_LEVEL_DIRS.has(dirName) || dirName.startsWith('.');
+}
+
+function getMaxSourceLengthForExtension(ext) {
+    if (!ext) {
+        return DEFAULT_MAX_SOURCE_LENGTH;
+    }
+    return MAX_SOURCE_LENGTH_BY_EXTENSION.get(ext) || DEFAULT_MAX_SOURCE_LENGTH;
+}
+
+function countLines(text) {
+    if (!text) {
+        return 0;
+    }
+    let count = 1;
+    let index = -1;
+    while (true) {
+        index = text.indexOf('\n', index + 1);
+        if (index === -1) {
+            break;
+        }
+        count += 1;
+    }
+    return count;
+}
+
+function escapeHtmlSafe(text) {
+    if (core && typeof core.escapeHtml === 'function') {
+        return core.escapeHtml(text);
+    }
+    return String(text)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+function formatLargePlainText(sourceCode, { language, relativePath }) {
+    const escaped = escapeHtmlSafe(sourceCode);
+    const lineCount = countLines(sourceCode);
+    const languageLabel = LANGUAGE_LABELS[language] || language || 'text';
+    const fileLabel = relativePath || 'Large File';
+
+    const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${escapeHtmlSafe(fileLabel)}</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: "Courier New", Courier, monospace;
+            background: #ffffff;
+            padding: 2rem;
+            margin: 0;
+            color: #111;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .notice {
+            background: #f0f4ff;
+            border: 1px solid #c6d4ff;
+            padding: 1rem;
+            border-radius: 6px;
+            margin-bottom: 1.5rem;
+            color: #234;
+            font-size: 0.95rem;
+        }
+        .meta {
+            margin-bottom: 1rem;
+            color: #555;
+            font-size: 0.9rem;
+        }
+        pre {
+            background: #fafafa;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            padding: 1.5rem;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            line-height: 1.4;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="notice">
+            Displaying <strong>${escapeHtmlSafe(fileLabel)}</strong> as plain text because it exceeds the syntax highlighting size threshold.
+        </div>
+        <div class="meta">
+            <div>Language: ${escapeHtmlSafe(languageLabel)}</div>
+            <div>Lines: ${lineCount.toLocaleString()}</div>
+        </div>
+        <pre>${escaped}</pre>
+    </div>
+</body>
+</html>`;
+
+    return {
+        standaloneHtml: html,
+        lineCount,
+        isPlainText: true
+    };
+}
+
+function formatSourceContent(sourceCode, { language, relativePath }) {
+    if (language === 'json') {
+        return formatJsonViewerPage(sourceCode, { relativePath });
+    }
+
+    if (sourceCode.length > LARGE_FILE_PLAIN_TEXT_THRESHOLD) {
+        return formatLargePlainText(sourceCode, { language, relativePath });
+    }
+
+    const result = core.formatCode({
+        code: sourceCode,
+        language,
+        maxWidth: DEFAULT_MAX_WIDTH
+    });
+
+    if (typeof result.lineCount !== 'number') {
+        result.lineCount = Array.isArray(result.lines) ? result.lines.length : countLines(sourceCode);
+    }
+
+    return result;
+}
+
+function formatJsonViewerPage(sourceCode, { relativePath }) {
+    const title = relativePath || 'JSON';
+    const escapedTitle = escapeHtmlSafe(title);
+    const rawEscaped = escapeHtmlSafe(sourceCode);
+    const storedJson = escapeHtmlSafe(sourceCode.replace(/<\/textarea>/gi, '<\\/textarea>'));
+    const characterCount = sourceCode.length;
+    const lineCount = countLines(sourceCode);
+
+    const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${escapedTitle}</title>
+    <style>
+        :root { color-scheme: light dark; }
+        * { box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            margin: 0;
+            padding: 2rem;
+            background: #f4f6fb;
+            color: #1f2933;
+        }
+        header { margin-bottom: 1.5rem; }
+        h1 {
+            margin: 0;
+            font-size: 1.6rem;
+            color: #0f172a;
+        }
+        .meta {
+            margin-top: 0.25rem;
+            color: #526581;
+            font-size: 0.9rem;
+        }
+        .viewer-shell {
+            background: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+            border: 1px solid rgba(15, 23, 42, 0.06);
+            overflow: hidden;
+        }
+        .view-controls {
+            display: flex;
+            gap: 0.5rem;
+            padding: 0.85rem 1rem;
+            background: linear-gradient(180deg, rgba(241, 245, 249, 0.9), rgba(226, 232, 240, 0.7));
+            border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+        }
+        .view-controls button {
+            appearance: none;
+            border: 1px solid rgba(15, 23, 42, 0.2);
+            background: rgba(255, 255, 255, 0.85);
+            color: #1f2933;
+            border-radius: 999px;
+            padding: 0.45rem 0.9rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .view-controls button:hover {
+            border-color: #2563eb;
+            color: #1d4ed8;
+        }
+        .view-controls button.active {
+            background: #2563eb;
+            border-color: #2563eb;
+            color: #ffffff;
+            box-shadow: 0 6px 18px rgba(37, 99, 235, 0.25);
+        }
+        .view {
+            display: none;
+            padding: 1.25rem 1.5rem;
+            max-height: 75vh;
+            overflow: auto;
+        }
+        .view.active { display: block; }
+        pre {
+            margin: 0;
+            font-family: "JetBrains Mono", "Fira Code", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+            font-size: 0.85rem;
+            line-height: 1.5;
+            white-space: pre;
+        }
+        .decoded-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        details {
+            border: 1px solid rgba(15, 23, 42, 0.12);
+            border-radius: 8px;
+            background: rgba(248, 250, 252, 0.7);
+            overflow: hidden;
+        }
+        details[open] {
+            background: rgba(241, 245, 249, 0.9);
+            border-color: #2563eb;
+            box-shadow: 0 12px 30px rgba(37, 99, 235, 0.08);
+        }
+        summary {
+            cursor: pointer;
+            padding: 0.75rem 1rem;
+            font-weight: 600;
+            font-size: 0.9rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 0.75rem;
+            list-style: none;
+        }
+        summary::-webkit-details-marker { display: none; }
+        .path {
+            color: #0f172a;
+            word-break: break-all;
+        }
+        .summary-meta {
+            font-size: 0.8rem;
+            color: #475569;
+            white-space: nowrap;
+        }
+        .decoded-block {
+            padding: 0.75rem 1rem 1rem;
+            border-top: 1px solid rgba(15, 23, 42, 0.08);
+            background: rgba(255, 255, 255, 0.9);
+        }
+        .decoded-info {
+            font-size: 0.8rem;
+            color: #475569;
+            margin-bottom: 0.75rem;
+        }
+        .control-char {
+            display: inline-block;
+            padding: 0 0.35rem;
+            margin: 0 0.05rem;
+            border-radius: 4px;
+            background: #334155;
+            color: #f8fafc;
+            font-size: 0.72rem;
+            line-height: 1.6;
+            font-weight: 600;
+        }
+        .control-legend {
+            margin: 1rem 0 0;
+            font-size: 0.8rem;
+            color: #475569;
+            display: none;
+        }
+        .control-legend.visible { display: block; }
+        .error {
+            padding: 1rem 1.25rem;
+            border-radius: 8px;
+            border: 1px solid rgba(220, 38, 38, 0.2);
+            background: rgba(254, 226, 226, 0.6);
+            color: #7f1d1d;
+        }
+        .placeholder {
+            font-size: 0.85rem;
+            color: #64748b;
+        }
+        textarea#json-data { display: none; }
+        @media (max-width: 768px) {
+            body { padding: 1.25rem; }
+            .viewer-shell { border-radius: 8px; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>${escapedTitle}</h1>
+        <p class="meta">Characters: ${characterCount.toLocaleString('en-US')} • Lines: ${lineCount.toLocaleString('en-US')}</p>
+    </header>
+
+    <div class="viewer-shell">
+        <div class="view-controls">
+            <button type="button" data-view="decoded" class="active">Decoded Strings</button>
+            <button type="button" data-view="pretty">Pretty JSON</button>
+            <button type="button" data-view="raw">Raw JSON</button>
+        </div>
+        <div id="decoded-view" class="view active">
+            <p class="placeholder">Parsing JSON…</p>
+        </div>
+        <pre id="pretty-view" class="view"></pre>
+        <pre id="raw-view" class="view">${rawEscaped}</pre>
+    </div>
+    <div id="control-legend" class="control-legend">
+        <strong>Control character legend:</strong>
+        NUL, SOH, STX, ETX, EOT, ENQ, ACK, BEL, BS, VT, FF, SO, SI, DLE, DC1, DC2, DC3, DC4, NAK, SYN, ETB, CAN, EM, SUB, ESC, FS, GS, RS, US, DEL.
+    </div>
+
+    <textarea id="json-data">${storedJson}</textarea>
+
+    <script>
+    (function () {
+        const CONTROL_NAMES = {
+            0: 'NUL', 1: 'SOH', 2: 'STX', 3: 'ETX', 4: 'EOT', 5: 'ENQ', 6: 'ACK', 7: 'BEL',
+            8: 'BS', 9: 'TAB', 10: 'LF', 11: 'VT', 12: 'FF', 13: 'CR', 14: 'SO', 15: 'SI',
+            16: 'DLE', 17: 'DC1', 18: 'DC2', 19: 'DC3', 20: 'DC4', 21: 'NAK', 22: 'SYN', 23: 'ETB',
+            24: 'CAN', 25: 'EM', 26: 'SUB', 27: 'ESC', 28: 'FS', 29: 'GS', 30: 'RS', 31: 'US',
+            127: 'DEL'
+        };
+
+        const buttons = Array.from(document.querySelectorAll('[data-view]'));
+        const views = {
+            decoded: document.getElementById('decoded-view'),
+            pretty: document.getElementById('pretty-view'),
+            raw: document.getElementById('raw-view')
+        };
+        const legend = document.getElementById('control-legend');
+
+        buttons.forEach(button => {
+            button.addEventListener('click', () => {
+                const target = button.dataset.view;
+                buttons.forEach(btn => btn.classList.toggle('active', btn === button));
+                Object.keys(views).forEach(key => {
+                    views[key].classList.toggle('active', key === target);
+                });
+            });
+        });
+
+        const escapeHtml = (str) => str.replace(/[&<>"']/g, (ch) => {
+            switch (ch) {
+                case '&': return '&amp;';
+                case '<': return '&lt;';
+                case '>': return '&gt;';
+                case '"': return '&quot;';
+                case "'": return '&#39;';
+                default: return ch;
+            }
+        });
+
+        const renderDecodedString = (str) => {
+            let containsControl = false;
+            let result = '';
+            for (let i = 0; i < str.length; i++) {
+                const code = str.charCodeAt(i);
+                if (code === 10 || code === 13 || code === 9) {
+                    result += str[i];
+                    continue;
+                }
+                const isControl = (code >= 0 && code <= 31) || code === 127;
+                if (isControl) {
+                    containsControl = true;
+                    const label = CONTROL_NAMES[code] || ('U+' + code.toString(16).padStart(4, '0').toUpperCase());
+                    result += '<span class="control-char" title="U+' +
+                        code.toString(16).padStart(4, '0').toUpperCase() + '">' + label + '</span>';
+                } else {
+                    result += escapeHtml(str[i]);
+                }
+            }
+            return { markup: result, containsControl };
+        };
+
+        const collectStrings = (value, path, output, depth) => {
+            const nextDepth = depth + 1;
+            if (typeof value === 'string') {
+                output.push({ path, value, depth });
+                return;
+            }
+            if (Array.isArray(value)) {
+                value.forEach((entry, index) => {
+                    const nextPath = path ? path + '[' + index + ']' : '[' + index + ']';
+                    collectStrings(entry, nextPath, output, nextDepth);
+                });
+                return;
+            }
+            if (value && typeof value === 'object') {
+                Object.keys(value).forEach((key) => {
+                    const nextPath = path ? path + '.' + key : key;
+                    collectStrings(value[key], nextPath, output, nextDepth);
+                });
+            }
+        };
+
+        const jsonTextarea = document.getElementById('json-data');
+        const rawText = jsonTextarea ? jsonTextarea.value : '';
+
+        let parsed;
+        try {
+            parsed = JSON.parse(rawText);
+        } catch (error) {
+            views.decoded.innerHTML = '<div class="error">Failed to parse JSON: ' +
+                escapeHtml(error.message) + '</div>';
+            views.pretty.textContent = rawText;
+            return;
+        }
+
+        try {
+            views.pretty.textContent = JSON.stringify(parsed, null, 2);
+        } catch (error) {
+            views.pretty.textContent = rawText;
+        }
+
+        const stringEntries = [];
+        collectStrings(parsed, '', stringEntries, 0);
+
+        if (stringEntries.length === 0) {
+            views.decoded.innerHTML = '<p class="placeholder">This JSON does not contain any string values to decode.</p>';
+            return;
+        }
+
+        const list = document.createElement('div');
+        list.className = 'decoded-list';
+        let legendNeeded = false;
+
+        stringEntries.forEach((entry, index) => {
+            const details = document.createElement('details');
+            if (index === 0) {
+                details.open = true;
+            }
+            details.dataset.index = String(index);
+
+            const summary = document.createElement('summary');
+            const safePath = entry.path ? escapeHtml(entry.path) : '(root string)';
+            const lengthLabel = entry.value.length.toLocaleString('en-US');
+            summary.innerHTML = '<span class="path">' + safePath +
+                '</span><span class="summary-meta">' + lengthLabel + ' chars</span>';
+            details.appendChild(summary);
+
+            const renderContent = () => {
+                if (details.dataset.rendered === 'true') {
+                    return;
+                }
+                const { markup, containsControl } = renderDecodedString(entry.value);
+                const block = document.createElement('div');
+                block.className = 'decoded-block';
+
+                const info = document.createElement('div');
+                info.className = 'decoded-info';
+                info.textContent = 'String length: ' + lengthLabel + ' characters';
+                block.appendChild(info);
+
+                const pre = document.createElement('pre');
+                pre.innerHTML = markup;
+                block.appendChild(pre);
+
+                details.appendChild(block);
+                details.dataset.rendered = 'true';
+
+                if (containsControl) {
+                    legendNeeded = true;
+                    legend.classList.add('visible');
+                }
+            };
+
+            details.addEventListener('toggle', () => {
+                if (details.open) {
+                    renderContent();
+                }
+            });
+
+            if (details.open) {
+                renderContent();
+            }
+
+            list.appendChild(details);
+        });
+
+        if (!legendNeeded) {
+            legend.classList.remove('visible');
+        }
+
+        views.decoded.innerHTML = '';
+        views.decoded.appendChild(list);
+    })();
+    </script>
+</body>
+</html>`;
+
+    return {
+        standaloneHtml: html,
+        lineCount,
+        isPlainText: false,
+        isJsonViewer: true
+    };
 }
 
 function generateIndexHtml(entries, options) {
@@ -498,16 +1013,18 @@ async function exportProjectWithAccessor(accessor, options = {}) {
             continue;
         }
 
-        if (sourceCode.length > DEFAULT_MAX_SOURCE_LENGTH) {
-            console.warn(`Skipping ${sourcePath}: exceeds max length (${sourceCode.length} > ${DEFAULT_MAX_SOURCE_LENGTH})`);
+        const maxSourceLength = getMaxSourceLengthForExtension(ext);
+        if (sourceCode.length > maxSourceLength) {
+            console.warn(`Skipping ${sourcePath}: exceeds max length for ${ext || 'unknown'} files (${sourceCode.length} > ${maxSourceLength})`);
             continue;
         }
 
-        const formatResult = core.formatCode({
-            code: sourceCode,
-            language,
-            maxWidth: DEFAULT_MAX_WIDTH
-        });
+        const formatResult = formatSourceContent(sourceCode, { language, relativePath });
+        const lineCount = typeof formatResult.lineCount === 'number' ? formatResult.lineCount : countLines(sourceCode);
+
+        if (formatResult.isPlainText) {
+            console.log(`Large file detected. Rendering ${sourcePath} as plain text (${sourceCode.length.toLocaleString()} characters).`);
+        }
 
         const outputRelativePath = buildOutputRelativePath(relativePath);
         const htmlOutputPath = `${outputBase}/${outputRelativePath}`;
@@ -522,7 +1039,7 @@ async function exportProjectWithAccessor(accessor, options = {}) {
             outputPath: htmlOutputPath,
             outputRelativePath,
             language,
-            lineCount: formatResult.lines.length,
+            lineCount,
             anchorId,
             directory,
             fileName
