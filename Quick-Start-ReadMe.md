@@ -5,7 +5,8 @@ Master Project Spreadsheet Generator
 Master Spreadsheet Generator - Create a Spreadsheet of your entire project.
 Developed by Citizen Lazlo, Production & Technical Artist, Port Townsend, WA.
 
-(Development, Bloviations, and vibe-coding conducted with the help of a.i. )
+(Development, Bloviations, and vibe-coding conducted with a.i. assistance including
+Claude Code & GPT Codex)
 ============================================================================
 
 Adventures in Coding :  Recently, I had this vague notion in mind that when 
