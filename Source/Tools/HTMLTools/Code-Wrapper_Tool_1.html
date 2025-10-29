@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Code Line Wrapper Tool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 2.5rem;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .header svg {
+            width: 32px;
+            height: 32px;
+            color: #2563eb;
+        }
+
+        h1 {
+            font-size: 2rem;
+            color: #1f2937;
+            font-weight: 700;
+        }
+
+        .description {
+            color: #6b7280;
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+        }
+
+        .controls {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        label {
+            font-weight: 500;
+            color: #374151;
+        }
+
+        input[type="number"] {
+            width: 80px;
+            padding: 0.5rem 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 1rem;
+        }
+
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .grid {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .text-panel {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .panel-label {
+            font-weight: 500;
+            color: #374151;
+            font-size: 0.875rem;
+        }
+
+        textarea {
+            width: 100%;
+            height: 350px;
+            padding: 1rem;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 0.875rem;
+            resize: vertical;
+            line-height: 1.5;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        textarea.output {
+            background-color: #f9fafb;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 6px;
+            font-weight: 500;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            background-color: #2563eb;
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background-color: #1d4ed8;
+        }
+
+        .btn-secondary {
+            background-color: #e5e7eb;
+            color: #374151;
+        }
+
+        .btn-secondary:hover {
+            background-color: #d1d5db;
+        }
+
+        .btn-success {
+            background-color: #16a34a;
+            color: white;
+            font-size: 0.875rem;
+            padding: 0.5rem 1rem;
+        }
+
+        .btn-success:hover {
+            background-color: #15803d;
+        }
+
+        .btn-success.copied {
+            background-color: #22c55e;
+        }
+
+        .info-box {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background-color: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 6px;
+        }
+
+        .info-box h3 {
+            color: #1e3a8a;
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .info-box ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .info-box li {
+            color: #1e40af;
+            font-size: 0.875rem;
+            line-height: 1.8;
+            padding-left: 1.5rem;
+            position: relative;
+        }
+
+        .info-box li:before {
+            content: "•";
+            position: absolute;
+            left: 0.5rem;
+            font-weight: bold;
+        }
+
+        .icon {
+            width: 18px;
+            height: 18px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="16" y1="13" x2="8" y2="13"></line>
+                <line x1="16" y1="17" x2="8" y2="17"></line>
+                <polyline points="10 9 9 9 8 9"></polyline>
+            </svg>
+            <h1>Code Line Wrapper</h1>
+        </div>
+
+        <p class="description">
+            Wrap long code lines at column <span id="widthDisplay">90</span> while preserving indentation.
+            Breaks at sensible points (spaces, punctuation) for readable code.
+        </p>
+
+        <div class="controls">
+            <div class="control-group">
+                <label for="maxWidth">Max Line Width:</label>
+                <input type="number" id="maxWidth" value="90" min="40" max="200">
+                <span style="color: #6b7280; font-size: 0.875rem;">characters</span>
+            </div>
+            <button class="btn-secondary" onclick="loadSample()">Load Sample</button>
+        </div>
+
+        <div class="grid">
+            <div class="text-panel">
+                <div class="panel-header">
+                    <span class="panel-label">Input Code (paste your code here)</span>
+                </div>
+                <textarea id="inputCode" placeholder="Paste your JavaScript code here..." spellcheck="false"></textarea>
+            </div>
+
+            <div class="text-panel">
+                <div class="panel-header">
+                    <span class="panel-label">Wrapped Output</span>
+                    <button id="copyBtn" class="btn-success" onclick="copyOutput()" style="display: none;">
+                        <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                        </svg>
+                        <span id="copyText">Copy</span>
+                    </button>
+                </div>
+                <textarea id="outputCode" class="output" readonly placeholder="Wrapped code will appear here..." spellcheck="false"></textarea>
+            </div>
+        </div>
+
+        <div class="button-group">
+            <button class="btn-primary" onclick="wrapLines()">
+                Wrap Lines
+            </button>
+            <button class="btn-secondary" onclick="clearAll()">
+                Clear All
+            </button>
+        </div>
+
+        <div class="info-box">
+            <h3>How it works:</h3>
+            <ul>
+                <li>Detects indentation at the start of each line</li>
+                <li>Breaks lines longer than <span id="widthInfo">90</span> characters</li>
+                <li>Preserves indentation on wrapped lines</li>
+                <li>Breaks at spaces, commas, operators (not mid-word)</li>
+                <li>Perfect for formatting code for documentation or PDFs</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        const inputCode = document.getElementById('inputCode');
+        const outputCode = document.getElementById('outputCode');
+        const maxWidthInput = document.getElementById('maxWidth');
+        const copyBtn = document.getElementById('copyBtn');
+        const copyText = document.getElementById('copyText');
+        const widthDisplay = document.getElementById('widthDisplay');
+        const widthInfo = document.getElementById('widthInfo');
+
+        maxWidthInput.addEventListener('input', function() {
+            const width = this.value || 90;
+            widthDisplay.textContent = width;
+            widthInfo.textContent = width;
+        });
+
+        outputCode.addEventListener('input', function() {
+            copyBtn.style.display = this.value ? 'flex' : 'none';
+        });
+
+        function wrapLines() {
+            const code = inputCode.value;
+            const maxWidth = parseInt(maxWidthInput.value) || 90;
+            
+            if (!code) {
+                alert('Please paste some code first!');
+                return;
+            }
+
+            const lines = code.split('\n');
+            const result = [];
+
+            lines.forEach(line => {
+                const indentMatch = line.match(/^(\s*)/);
+                const indent = indentMatch ? indentMatch[1] : '';
+                const indentLength = indent.length;
+
+                if (line.length <= maxWidth) {
+                    result.push(line);
+                    return;
+                }
+
+                let remaining = line;
+                let isFirstLine = true;
+
+                while (remaining.length > maxWidth) {
+                    const effectiveWidth = maxWidth;
+                    
+                    let breakPoint = effectiveWidth;
+                    const searchStart = Math.max(0, effectiveWidth - 30);
+                    
+                    const breakChars = [' ', ',', ';', '.', '(', ')', '{', '}', '[', ']', '>', '<', '+', '-', '='];
+                    let bestBreak = -1;
+                    
+                    for (let i = effectiveWidth; i >= searchStart; i--) {
+                        if (breakChars.includes(remaining[i])) {
+                            bestBreak = i + 1;
+                            break;
+                        }
+                    }
+
+                    if (bestBreak > indentLength) {
+                        breakPoint = bestBreak;
+                    }
+
+                    const currentLine = remaining.substring(0, breakPoint).trimEnd();
+                    result.push(currentLine);
+
+                    remaining = indent + remaining.substring(breakPoint).trimStart();
+                    isFirstLine = false;
+                }
+
+                if (remaining.trim()) {
+                    result.push(remaining);
+                }
+            });
+
+            outputCode.value = result.join('\n');
+        }
+
+        function copyOutput() {
+            outputCode.select();
+            document.execCommand('copy');
+            
+            copyText.textContent = 'Copied!';
+            copyBtn.classList.add('copied');
+            
+            setTimeout(() => {
+                copyText.textContent = 'Copy';
+                copyBtn.classList.remove('copied');
+            }, 2000);
+        }
+
+        function clearAll() {
+            inputCode.value = '';
+            outputCode.value = '';
+        }
+
+        function loadSample() {
+            inputCode.value = `        const toggleSizeButton = document.getElementById('toggleSizeButton');
+        const viewLargeButton = document.getElementById('viewLargeButton');
+        const viewMediumButton = document.getElementById('viewMediumButton');
+        const viewSmallButton = document.getElementById('viewSmallButton');
+        const viewTinyButton = document.getElementById('viewTinyButton');
+
+        const hideSizeOptions = () => {
+            const sizeOptionsContainer = document.getElementById('sizeOptionsContainer');
+            if (sizeOptionsContainer) {
+                sizeOptionsContainer.classList.add('hidden');
+                sizeOptionsContainer.style.display = 'none';
+            }
+        };
+
+        // Attach event listeners to size buttons
+        if (toggleSizeButton) toggleSizeButton.addEventListener('click', () => toggleSizeOptions(log));
+        if (viewLargeButton) viewLargeButton.addEventListener('click', (event) => { event.stopPropagation(); setViewSize('large', log); hideSizeOptions(); });
+        if (viewMediumButton) viewMediumButton.addEventListener('click', (event) => { event.stopPropagation(); setViewSize('medium', log); hideSizeOptions(); });`;
+        }
+
+        inputCode.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'Enter') {
+                wrapLines();
+            }
+        });
+    </script>
+</body>
+</html>

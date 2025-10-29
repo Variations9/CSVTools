@@ -3,8 +3,14 @@ Master Project Spreadsheet Generator
 
 ============================================================================
 Master Spreadsheet Generator - Create a Spreadsheet of your entire project.
-Developed by E. Harrison, Production & Technical Artist in Studio @ Port Townsend, 
-( Bloviations and vibe-coding from a.i. Claude code & ChatGPT Codex. )
+Developed by (Pseudonym 'vibe-coder' Name), Production & Technical Artist, 
+Port Townsend, WA.
+
+(Development, Bloviations, and vibe-coding conducted by a: the conductor, and b: a.i. )
+
+The estimated rates of effectiveness range from 10% to 45% effective!
+The rates of gaining ground through Machine Learning, is much improving.
+This Snapshot is 99.9 % Effective... I think!
 ============================================================================
 
 Adventures in Coding :  Recently, I had this vague notion in mind that when 

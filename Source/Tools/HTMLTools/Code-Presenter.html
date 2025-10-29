@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Code Presenter - Print Ready Formatter</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 2.5rem;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .header svg {
+            width: 32px;
+            height: 32px;
+            color: #2563eb;
+        }
+
+        h1 {
+            font-size: 2rem;
+            color: #1f2937;
+            font-weight: 700;
+        }
+
+        .controls {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        label {
+            font-weight: 500;
+            color: #374151;
+        }
+
+        input[type="number"], select {
+            padding: 0.5rem 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 1rem;
+        }
+
+        input[type="number"] {
+            width: 80px;
+        }
+
+        select {
+            min-width: 150px;
+        }
+
+        input[type="number"]:focus, select:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .input-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .panel-label {
+            font-weight: 500;
+            color: #374151;
+            font-size: 0.875rem;
+        }
+
+        textarea {
+            width: 100%;
+            height: 350px;
+            padding: 1rem;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 0.875rem;
+            resize: vertical;
+            line-height: 1.5;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 1.5rem;
+        }
+
+        button {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 6px;
+            font-weight: 500;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            background-color: #2563eb;
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background-color: #1d4ed8;
+        }
+
+        .btn-secondary {
+            background-color: #e5e7eb;
+            color: #374151;
+        }
+
+        .btn-secondary:hover {
+            background-color: #d1d5db;
+        }
+
+        .btn-success {
+            background-color: #16a34a;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background-color: #15803d;
+        }
+
+        .info-box {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background-color: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 6px;
+        }
+
+        .info-box h3 {
+            color: #1e3a8a;
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .info-box ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .info-box li {
+            color: #1e40af;
+            font-size: 0.875rem;
+            line-height: 1.8;
+            padding-left: 1.5rem;
+            position: relative;
+        }
+
+        .info-box li:before {
+            content: "•";
+            position: absolute;
+            left: 0.5rem;
+            font-weight: bold;
+        }
+
+        .icon {
+            width: 18px;
+            height: 18px;
+        }
+
+        .success-message {
+            margin-top: 1rem;
+            padding: 1rem;
+            background-color: #d1fae5;
+            border: 1px solid #34d399;
+            border-radius: 6px;
+            color: #065f46;
+            display: none;
+        }
+
+        .color-customization {
+            margin-top: 2rem;
+        }
+
+        .color-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .color-control {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .color-control label {
+            font-size: 0.875rem;
+            color: #374151;
+        }
+
+        .color-control input[type="color"] {
+            width: 25px;
+            height: 25px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="12" y1="18" x2="12" y2="12"></line>
+                <line x1="9" y1="15" x2="15" y2="15"></line>
+            </svg>
+            <h1>Code Presenter</h1>
+        </div>
+
+        <div class="controls">
+            <div class="control-group">
+                <label for="maxWidth">Max Line Width:</label>
+                <input type="number" id="maxWidth" value="80" min="40" max="120">
+                <span style="color: #6b7280; font-size: 0.875rem;">characters</span>
+            </div>
+            <div class="control-group">
+                <label for="language">Language:</label>
+                <select id="language">
+                    <option value="csharp">C#</option>
+                    <option value="javascript" selected>JavaScript</option>
+                    <option value="json">JSON</option>
+                    <option value="java">Java</option>
+                    <option value="python">Python</option>
+                    <option value="cpp">C++</option>
+                    <option value="css">CSS</option>
+                    <option value="html">HTML</option>
+                </select>
+            </div>
+            <button class="btn-secondary" onclick="loadSample()">Load Sample</button>
+        </div>
+
+        <div class="input-section">
+            <div class="panel-header">
+                <span class="panel-label">Input Code (paste your code here)</span>
+            </div>
+            <textarea id="inputCode" placeholder="Paste your code here..." spellcheck="false"></textarea>
+        </div>
+
+        <div class="button-group">
+            <button class="btn-primary" onclick="previewFormattedCode()">
+                <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+                Preview Formatted Code
+            </button>
+            <button class="btn-success" onclick="downloadFormattedCode()" id="downloadBtn" style="display: none;">
+                <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                Download Formatted Code
+            </button>
+            <button class="btn-secondary" onclick="clearAll()">
+                Clear All
+            </button>
+        </div>
+
+        <div class="success-message" id="successMessage">
+            ✓ HTML file generated! Check your downloads folder for "formatted-code.html"
+        </div>
+
+        <dialog id="templateDialog" style="border: none; border-radius: 12px; padding: 0; box-shadow: 0 24px 50px rgba(15, 23, 42, 0.35);">
+            <form method="dialog" style="margin: 0; padding: 24px 28px; width: 420px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #1e293b; background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%); border-radius: 12px;">
+                <h2 style="margin: 0 0 8px; font-size: 20px; font-weight: 700;">Start Code Export</h2>
+                <p style="margin: 0 0 20px; color: #475569;">Choose how you want to populate the formatter before exporting.</p>
+
+                <fieldset style="border: none; margin: 0; padding: 0; display: grid; gap: 12px;">
+                    <button value="empty" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; border: 1px solid #dbeafe; border-radius: 10px; background: rgba(59, 130, 246, 0.08); color: #1d4ed8; font-weight: 600; cursor: pointer;">
+                        <span>Start with empty editor</span>
+                        <span style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em;">⌘ + N</span>
+                    </button>
+                    <button value="sample" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; border: 1px solid #fcd34d; border-radius: 10px; background: rgba(250, 204, 21, 0.12); color: #92400e; font-weight: 600; cursor: pointer;">
+                        <span>Load sample code</span>
+                        <span style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em;">⌘ + L</span>
+                    </button>
+                    <button value="cancel" style="display: flex; align-items: center; justify-content: center; padding: 12px 14px; border: 1px solid #e2e8f0; border-radius: 10px; background: #ffffff; color: #475569; font-weight: 500; cursor: pointer;">Cancel</button>
+                </fieldset>
+            </form>
+        </dialog>
+
+        <div style="background: #f3f4f6; border-radius: 8px; padding: 1.5rem; margin-bottom: 2rem;">
+            <h3 style="color: #374151; font-weight: 600; margin-bottom: 1rem;">🎨 Theme Manager</h3>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
+                <div class="control-group">
+                    <label for="themeSelect">Load Theme:</label>
+                    <select id="themeSelect" style="min-width: 200px;">
+                        <option value="">-- Select Theme --</option>
+                        <option value="classic">Classic (Default)</option>
+                        <option value="dark">Dark Mode</option>
+                        <option value="vibrant">Vibrant</option>
+                    </select>
+                </div>
+                
+                <div class="control-group">
+                    <label for="customThemeName">Save Current as Theme:</label>
+                    <input type="text" id="customThemeName" placeholder="Enter theme name..." style="padding: 0.5rem 0.75rem; border: 1px solid #d1d5db; border-radius: 6px; width: 200px;">
+                </div>
+            </div>
+            
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                <button class="btn-primary" onclick="loadTheme()" style="padding: 0.5rem 1rem; font-size: 0.875rem;">
+                    Load Theme
+                </button>
+                <button class="btn-success" onclick="saveCustomTheme()" style="padding: 0.5rem 1rem; font-size: 0.875rem;">
+                    Save Custom Theme
+                </button>
+                <button class="btn-secondary" onclick="deleteCustomTheme()" style="padding: 0.5rem 1rem; font-size: 0.875rem;">
+                    Delete Selected Theme
+                </button>
+            </div>
+            
+            <div id="themeMessage" style="margin-top: 1rem; padding: 0.75rem; background: #dbeafe; border: 1px solid #93c5fd; border-radius: 6px; color: #1e40af; display: none; font-size: 0.875rem;">
+            </div>
+        </div>
+
+        <div id="previewSection" style="display: none; margin-top: 2rem;">
+            <div class="panel-header">
+                <span class="panel-label">Formatted Code Preview</span>
+            </div>
+            <div id="previewContainer" style="border: 1px solid #d1d5db; border-radius: 6px; padding: 2rem; background: #ffffff; max-height: 600px; overflow-y: auto; font-family: 'Consolas', 'Monaco', 'Courier New', monospace; line-height: 1.6;">
+            </div>
+        </div>
+
+        <div class="color-customization">
+            <h3 style="color: #374151; font-weight: 600; margin-bottom: 1rem;">Color & Font Customization</h3>
+            
+            <div style="margin-bottom: 1.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid #e5e7eb;">
+                <h4 style="color: #374151; font-size: 0.9rem; font-weight: 600; margin-bottom: 0.75rem;">Font Settings</h4>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                    <div class="control-group">
+                        <label for="commentFont">Comment Font:</label>
+                        <select id="commentFont" style="min-width: 180px;">
+                            <option value="'Courier New', Courier, monospace">Courier New</option>
+                            <option value="Monaco, 'Lucida Console', monospace">Monaco</option>
+                            <option value="'Lucida Console', Monaco, monospace">Lucida Console</option>
+                            <option value="Arial, Helvetica, sans-serif">Arial</option>
+                            <option value="Helvetica, Arial, sans-serif">Helvetica</option>
+                            <option value="Verdana, Geneva, sans-serif">Verdana</option>
+                            <option value="Georgia, 'Times New Roman', serif">Georgia</option>
+                            <option value="'Times New Roman', Times, serif">Times New Roman</option>
+                            <option value="'Trebuchet MS', Helvetica, sans-serif">Trebuchet MS</option>
+                            <option value="'Comic Sans MS', cursive, sans-serif">Comic Sans MS</option>
+                            <option value="Impact, Charcoal, sans-serif">Impact</option>
+                            <option value="'Palatino Linotype', 'Book Antiqua', Palatino, serif">Palatino</option>
+                            <option value="Garamond, 'Hoefler Text', serif">Garamond</option>
+                            <option value="'Century Gothic', CenturyGothic, sans-serif">Century Gothic</option>
+                            <option value="'Bookman Old Style', serif" selected>Bookman</option>
+                            <option value="Tahoma, Geneva, sans-serif">Tahoma</option>
+                            <option value="Geneva, Tahoma, sans-serif">Geneva</option>
+                            <option value="Optima, Segoe, sans-serif">Optima</option>
+                            <option value="Cambria, Georgia, serif">Cambria</option>
+                            <option value="Calibri, Candara, sans-serif">Calibri</option>
+                            <option value="'Segoe UI', Tahoma, sans-serif">Segoe UI</option>
+                            <option value="'Franklin Gothic Medium', sans-serif">Franklin Gothic</option>
+                            <option value="Rockwell, 'Courier Bold', serif">Rockwell</option>
+                            <option value="'Brush Script MT', cursive">Brush Script MT</option>
+                            <option value="Baskerville, 'Baskerville Old Face', serif">Baskerville</option>
+                            <option value="Futura, 'Century Gothic', sans-serif">Futura</option>
+                            <option value="Didot, 'Didot LT STD', serif">Didot</option>
+                            <option value="'Bodoni MT', Didot, serif">Bodoni MT</option>
+                            <option value="Copperplate, 'Copperplate Gothic', sans-serif">Copperplate</option>
+                            <option value="Papyrus, fantasy">Papyrus</option>
+                            <option value="Courier, 'Courier New', monospace">Courier</option>
+                            <option value="'Andale Mono', monospace">Andale Mono</option>
+                            <option value="Constantia, 'Lucida Bright', serif">Constantia</option>
+                            <option value="Corbel, 'Lucida Grande', sans-serif">Corbel</option>
+                            <option value="Candara, Calibri, sans-serif">Candara</option>
+                            <option value="'Gill Sans', 'Gill Sans MT', sans-serif">Gill Sans</option>
+                        </select>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="codeFont">Code Font:</label>
+                        <select id="codeFont" style="min-width: 180px;">
+                            <option value="'Courier New', Courier, monospace" selected>Courier New</option>
+                            <option value="Monaco, 'Lucida Console', monospace">Monaco</option>
+                            <option value="'Lucida Console', Monaco, monospace">Lucida Console</option>
+                            <option value="Arial, Helvetica, sans-serif">Arial</option>
+                            <option value="Helvetica, Arial, sans-serif">Helvetica</option>
+                            <option value="Verdana, Geneva, sans-serif">Verdana</option>
+                            <option value="Georgia, 'Times New Roman', serif">Georgia</option>
+                            <option value="'Times New Roman', Times, serif">Times New Roman</option>
+                            <option value="'Trebuchet MS', Helvetica, sans-serif">Trebuchet MS</option>
+                            <option value="'Comic Sans MS', cursive, sans-serif">Comic Sans MS</option>
+                            <option value="Impact, Charcoal, sans-serif">Impact</option>
+                            <option value="'Palatino Linotype', 'Book Antiqua', Palatino, serif">Palatino</option>
+                            <option value="Garamond, 'Hoefler Text', serif">Garamond</option>
+                            <option value="'Century Gothic', CenturyGothic, sans-serif">Century Gothic</option>
+                            <option value="'Bookman Old Style', serif">Bookman</option>
+                            <option value="Tahoma, Geneva, sans-serif">Tahoma</option>
+                            <option value="Geneva, Tahoma, sans-serif">Geneva</option>
+                            <option value="Optima, Segoe, sans-serif">Optima</option>
+                            <option value="Cambria, Georgia, serif">Cambria</option>
+                            <option value="Calibri, Candara, sans-serif">Calibri</option>
+                            <option value="'Segoe UI', Tahoma, sans-serif">Segoe UI</option>
+                            <option value="'Franklin Gothic Medium', sans-serif">Franklin Gothic</option>
+                            <option value="Rockwell, 'Courier Bold', serif">Rockwell</option>
+                            <option value="'Brush Script MT', cursive">Brush Script MT</option>
+                            <option value="Baskerville, 'Baskerville Old Face', serif">Baskerville</option>
+                            <option value="Futura, 'Century Gothic', sans-serif">Futura</option>
+                            <option value="Didot, 'Didot LT STD', serif">Didot</option>
+                            <option value="'Bodoni MT', Didot, serif">Bodoni MT</option>
+                            <option value="Copperplate, 'Copperplate Gothic', sans-serif">Copperplate</option>
+                            <option value="Papyrus, fantasy">Papyrus</option>
+                            <option value="Courier, 'Courier New', monospace">Courier</option>
+                            <option value="'Andale Mono', monospace">Andale Mono</option>
+                            <option value="Constantia, 'Lucida Bright', serif">Constantia</option>
+                            <option value="Corbel, 'Lucida Grande', sans-serif">Corbel</option>
+                            <option value="Candara, Calibri, sans-serif">Candara</option>
+                            <option value="'Gill Sans', 'Gill Sans MT', sans-serif">Gill Sans</option>
+                        </select>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="commentFontSize">Comment Font Size:</label>
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <input type="number" id="commentFontSize" value="11" min="6" max="24" style="width: 70px;">
+                            <span style="color: #6b7280; font-size: 0.875rem;">pt</span>
+                        </div>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="codeFontSize">Code Font Size:</label>
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <input type="number" id="codeFontSize" value="12" min="6" max="24" style="width: 70px;">
+                            <span style="color: #6b7280; font-size: 0.875rem;">pt</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1rem;">
+                    <div class="control-group" style="flex-direction: row;">
+                        <label style="display: flex; align-items: center; gap: 0.5rem;">
+                            <input type="checkbox" id="commentBold">
+                            <span>Comment Bold</span>
+                        </label>
+                    </div>
+                    
+                    <div class="control-group" style="flex-direction: row;">
+                        <label style="display: flex; align-items: center; gap: 0.5rem;">
+                            <input type="checkbox" id="commentItalic">
+                            <span>Comment Italic</span>
+                        </label>
+                    </div>
+                    
+                    <div class="control-group" style="flex-direction: row;">
+                        <label style="display: flex; align-items: center; gap: 0.5rem;">
+                            <input type="checkbox" id="codeBold" checked>
+                            <span>Code Bold</span>
+                        </label>
+                    </div>
+                    
+                    <div class="control-group" style="flex-direction: row;">
+                        <label style="display: flex; align-items: center; gap: 0.5rem;">
+                            <input type="checkbox" id="codeItalic">
+                            <span>Code Italic</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            
+            <h4 style="color: #374151; font-size: 0.9rem; font-weight: 600; margin-bottom: 0.75rem;">Syntax Colors</h4>
+            <div class="color-grid">
+                <div class="color-control">
+                    <label for="commentColor">Comments</label>
+                    <input type="color" id="commentColor" value="#228b22">
+                </div>
+                
+                <div class="color-control">
+                    <label for="keywordColor">Keywords</label>
+                    <input type="color" id="keywordColor" value="#0000ff">
+                </div>
+                
+                <div class="color-control">
+                    <label for="stringColor">Strings</label>
+                    <input type="color" id="stringColor" value="#a31515">
+                </div>
+                
+                <div class="color-control">
+                    <label for="numberColor">Numbers</label>
+                    <input type="color" id="numberColor" value="#098658">
+                </div>
+                
+                <div class="color-control">
+                    <label for="functionColor">Functions</label>
+                    <input type="color" id="functionColor" value="#795e26">
+                </div>
+                
+                <div class="color-control">
+                    <label for="typeColor">Types/Classes</label>
+                    <input type="color" id="typeColor" value="#267f99">
+                </div>
+                
+                <div class="color-control">
+                    <label for="variableColor">Variables</label>
+                    <input type="color" id="variableColor" value="#001080">
+                </div>
+                
+                <div class="color-control">
+                    <label for="operatorColor">Operators</label>
+                    <input type="color" id="operatorColor" value="#000000">
+                </div>
+            </div>
+            
+            <div style="margin-top: 1rem; display: flex; gap: 0.5rem;">
+                <button class="btn-secondary" onclick="resetColors()" style="padding: 0.5rem 1rem; font-size: 0.875rem;">
+                    Reset All to Defaults
+                </button>
+            </div>
+        </div>
+    </div>
+    <script src="code-presenter-core.js"></script>
+    <script src="code-presenter-app.js"></script>
+
+</body>
+</html>

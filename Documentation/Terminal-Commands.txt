@@ -1,7 +1,9 @@
-npm run test:coverage
 
+To Generate the new .csv file
 node Source/Tools/CSVTools/update-csv-workflow.mjs
 
+To generate the .csv file, saving the workflow to the logs folder
 node Source/Tools/CSVTools/update-csv-workflow.mjs 2>&1 | tee Documentation/logs/workflow-$(date +%Y%m%d-%H%M%S).log
 
-
+To generate a .html web page script viewer of the Source folder:
+node .\Source\Tools\HTMLTools\export-project.cjs
