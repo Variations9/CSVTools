@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formatted Code - JavaScript</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', Courier, monospace;
+            background: #ffffff;
+            padding: 3rem;
+            color: #000000;
+            line-height: 1.6;
+            font-size: 12pt;
+            font-weight: bold;
+            font-style: normal;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: #ffffff;
+        }
+
+        .code-container {
+            background: #ffffff;
+            padding: 0;
+        }
+
+        .code-line {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            margin-bottom: 0.1rem;
+        }
+
+        .comment {
+            color: #228b22;
+            font-size: 11pt;
+            font-family: 'Bookman Old Style', serif;
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        .keyword {
+            color: #0000ff;
+            font-weight: 600;
+        }
+
+        .string {
+            color: #a31515;
+        }
+
+        .number {
+            color: #098658;
+        }
+
+        .function {
+            color: #795e26;
+        }
+
+        .operator {
+            color: #000000;
+        }
+
+        .type {
+            color: #267f99;
+        }
+
+        .variable {
+            color: #001080;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .code-container {
+                border: none;
+                padding: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="code-container">
+            <div class="code-line"><span class="keyword">import</span><span class="operator"> </span><span class="variable">path</span><span class="operator"> </span><span class="keyword">from</span><span class="operator"> </span><span class="string">&#039;path&#039;</span><span class="operator">;</span></div>
+            <div class="code-line"><span class="keyword">import</span><span class="operator"> </span><span class="operator">{</span><span class="operator"> </span><span class="variable">pathToFileURL</span><span class="operator"> </span><span class="operator">}</span><span class="operator"> </span><span class="keyword">from</span><span class="operator"> </span><span class="string">&#039;url&#039;</span><span class="operator">;</span></div>
+            <div class="code-line"><span class="keyword">import</span><span class="operator"> </span><span class="variable">cjsModule</span><span class="operator"> </span><span class="keyword">from</span><span class="operator"> </span><span class="string">&#039;./export-project.cjs&#039;</span><span class="operator">;</span></div>
+            <div class="code-line"></div>
+            <div class="code-line"><span class="keyword">const</span><span class="operator"> </span><span class="operator">{</span><span class="operator"> </span><span class="variable">exportProject</span><span class="operator"> </span><span class="operator">}</span><span class="operator"> </span><span class="operator">=</span><span class="operator"> </span><span class="variable">cjsModule</span><span class="operator">;</span></div>
+            <div class="code-line"></div>
+            <div class="code-line"><span class="keyword">export</span><span class="operator"> </span><span class="operator">{</span><span class="operator"> </span><span class="variable">exportProject</span><span class="operator"> </span><span class="operator">}</span><span class="operator">;</span></div>
+            <div class="code-line"><span class="keyword">export</span><span class="operator"> </span><span class="keyword">default</span><span class="operator"> </span><span class="variable">exportProject</span><span class="operator">;</span></div>
+            <div class="code-line"></div>
+            <div class="code-line"><span class="keyword">const</span><span class="operator"> </span><span class="variable">isMainModule</span><span class="operator"> </span><span class="operator">=</span><span class="operator"> </span><span class="operator">(</span><span class="operator">(</span><span class="operator">)</span><span class="operator"> </span><span class="operator">=</span><span class="operator">&gt;</span><span class="operator"> </span><span class="operator">{</span></div>
+            <div class="code-line"><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="keyword">if</span><span class="operator"> </span><span class="operator">(</span><span class="keyword">typeof</span><span class="operator"> </span><span class="variable">process</span><span class="operator"> </span><span class="operator">=</span><span class="operator">=</span><span class="operator">=</span><span class="operator"> </span><span class="string">&#039;undefined&#039;</span><span class="operator"> </span><span class="operator">|</span><span class="operator">|</span><span class="operator"> </span><span class="operator">!</span><span class="variable">process</span><span class="operator">.</span><span class="variable">argv</span><span class="operator"> </span><span class="operator">|</span><span class="operator">|</span><span class="operator"> </span><span class="variable">process</span><span class="operator">.</span><span class="variable">argv</span><span class="operator">.</span><span class="variable">length</span><span class="operator"> </span><span class="operator">=</span><span class="operator">=</span><span class="operator">=</span><span class="operator"> </span><span class="number">0</span><span class="operator">)</span><span class="operator"> </span><span class="operator">{</span></div>
+            <div class="code-line"><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="keyword">return</span><span class="operator"> </span><span class="keyword">false</span><span class="operator">;</span></div>
+            <div class="code-line"><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator">}</span></div>
+            <div class="code-line"><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="keyword">try</span><span class="operator"> </span><span class="operator">{</span></div>
+            <div class="code-line"><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="keyword">const</span><span class="operator"> </span><span class="variable">entryUrl</span><span class="operator"> </span><span class="operator">=</span><span class="operator"> </span><span class="function">pathToFileURL</span><span class="operator">(</span><span class="variable">process</span><span class="operator">.</span><span class="variable">argv</span><span class="operator">[</span><span class="number">1</span><span class="operator">]</span><span class="operator">)</span><span class="operator">.</span><span class="variable">href</span><span class="operator">;</span></div>
+            <div class="code-line"><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="keyword">return</span><span class="operator"> </span><span class="keyword">import</span><span class="operator">.</span><span class="variable">meta</span><span class="operator">.</span><span class="variable">url</span><span class="operator"> </span><span class="operator">=</span><span class="operator">=</span><span class="operator">=</span><span class="operator"> </span><span class="variable">entryUrl</span><span class="operator">;</span></div>
+            <div class="code-line"><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator">}</span><span class="operator"> </span><span class="keyword">catch</span><span class="operator"> </span><span class="operator">(</span><span class="variable">error</span><span class="operator">)</span><span class="operator"> </span><span class="operator">{</span></div>
+            <div class="code-line"><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="keyword">return</span><span class="operator"> </span><span class="keyword">false</span><span class="operator">;</span></div>
+            <div class="code-line"><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator">}</span></div>
+            <div class="code-line"><span class="operator">}</span><span class="operator">)</span><span class="operator">(</span><span class="operator">)</span><span class="operator">;</span></div>
+            <div class="code-line"></div>
+            <div class="code-line"><span class="keyword">if</span><span class="operator"> </span><span class="operator">(</span><span class="variable">isMainModule</span><span class="operator">)</span><span class="operator"> </span><span class="operator">{</span></div>
+            <div class="code-line"><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="function">exportProject</span><span class="operator">(</span><span class="operator">)</span><span class="operator">.</span><span class="keyword">catch</span><span class="operator">(</span><span class="variable">error</span><span class="operator"> </span><span class="operator">=</span><span class="operator">&gt;</span><span class="operator"> </span><span class="operator">{</span></div>
+            <div class="code-line"><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="keyword">const</span><span class="operator"> </span><span class="variable">message</span><span class="operator"> </span><span class="operator">=</span><span class="operator"> </span><span class="variable">error</span><span class="operator"> </span><span class="operator">&amp;</span><span class="operator">&amp;</span><span class="operator"> </span><span class="variable">error</span><span class="operator">.</span><span class="variable">message</span><span class="operator"> </span><span class="operator">?</span><span class="operator"> </span><span class="variable">error</span><span class="operator">.</span><span class="variable">message</span><span class="operator"> </span><span class="operator">:</span><span class="operator"> </span><span class="variable">error</span><span class="operator">;</span></div>
+            <div class="code-line"><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="keyword">if</span><span class="operator"> </span><span class="operator">(</span><span class="keyword">typeof</span><span class="operator"> </span><span class="variable">console</span><span class="operator"> </span><span class="operator">!</span><span class="operator">=</span><span class="operator">=</span><span class="operator"> </span><span class="string">&#039;undefined&#039;</span><span class="operator"> </span><span class="operator">&amp;</span><span class="operator">&amp;</span><span class="operator"> </span><span class="variable">console</span><span class="operator">.</span><span class="variable">error</span><span class="operator">)</span><span class="operator"> </span><span class="operator">{</span></div>
+            <div class="code-line"><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="variable">console</span><span class="operator">.</span><span class="function">error</span><span class="operator">(</span><span class="string">&#039;Export failed:&#039;</span><span class="operator">,</span><span class="operator"> </span><span class="variable">message</span><span class="operator">)</span><span class="operator">;</span></div>
+            <div class="code-line"><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator">}</span></div>
+            <div class="code-line"><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="keyword">if</span><span class="operator"> </span><span class="operator">(</span><span class="keyword">typeof</span><span class="operator"> </span><span class="variable">process</span><span class="operator"> </span><span class="operator">!</span><span class="operator">=</span><span class="operator">=</span><span class="operator"> </span><span class="string">&#039;undefined&#039;</span><span class="operator"> </span><span class="operator">&amp;</span><span class="operator">&amp;</span><span class="operator"> </span><span class="keyword">typeof</span><span class="operator"> </span><span class="variable">process</span><span class="operator">.</span><span class="variable">exit</span><span class="operator"> </span><span class="operator">=</span><span class="operator">=</span><span class="operator">=</span><span class="operator"> </span><span class="string">&#039;function&#039;</span><span class="operator">)</span><span class="operator"> </span><span class="operator">{</span></div>
+            <div class="code-line"><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="variable">process</span><span class="operator">.</span><span class="function">exit</span><span class="operator">(</span><span class="number">1</span><span class="operator">)</span><span class="operator">;</span></div>
+            <div class="code-line"><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator">}</span></div>
+            <div class="code-line"><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator"> </span><span class="operator">}</span><span class="operator">)</span><span class="operator">;</span></div>
+            <div class="code-line"><span class="operator">}</span></div>
+            <div class="code-line"></div>
+        </div>
+    </div>
+</body>
+</html>

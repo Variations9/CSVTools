@@ -10,7 +10,7 @@ Port Townsend, WA.
 
 The estimated rates of effectiveness range from 10% to 45% effective!
 The rates of gaining ground through Machine Learning, is much improving.
-This Snapshot is 99.9 % Effective... I think!
+This Snapshot is 99.9 % Effective... I do not promise!  But it is quite effective!
 ============================================================================
 
 Adventures in Coding :  Recently, I had this vague notion in mind that when 
@@ -52,4 +52,3 @@ After Generating the new .csv, you can rename it, and replace it with this exist
 
 View Spreadsheets by importing the .csv into Google Sheets.
 Additional questions?  call / email me!
-E.H.
