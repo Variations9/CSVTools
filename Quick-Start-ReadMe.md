@@ -2,11 +2,15 @@
 Master Project Spreadsheet Generator
 
 ============================================================================
-Master Spreadsheet Generator - Create a Spreadsheet of your entire project.
-Developed by Citizen Lazlo, Production & Technical Artist, Port Townsend, WA.
 
-(Development, Bloviations, and vibe-coding conducted with a.i. assistance including
-Claude Code & GPT Codex)
+ * THIS PACKAGE - a versatile spreadsheet tool generator and a html exporter wiki page generator tool.
+
+ * Developed by Variations9@Github, Production Artist.
+ 
+Development, Variations, Deviations, and Vibe-coding with the help of a.i., including Claude Code and GPT Codex was at play. This submission has been carefully curated and crafted into submission, whereupon the Program works beautifully.  Using a modular object-based architecture, one can develop and build upon these tools with an ease of expandability.  During these early and present days of using machine learning to generate code, the 'large language models' do a fairly decent if not amazing go at it. But I must confess that it had surmounted a massively complex challenge, in that there were multiple hurdles to overcome, that of carefully crafting and curating it all together into a modular system increment by increment.  Overcoming them became the coding adventurers journey, a deep dive into a labyrinthian complex into additional rabbit holes of complexity.  Fortunately, patterns emerged and  most of the intricacies were eventually mapped out.  When discovered initially, and through multiple iterations of developing updated versions, the continuum can at least sustain this fun and interesting journey along the way, now that (hopefully) the effectiveness will really gain momentum, There are many adventures throughout these ongoing processes that are worth in-depth future discussion. These Folders are a result of care and consideration. If you're a professional or a hobby computer science practitioner, You're probably quite better skilled at all this, than I am.  Perhaps you're seeing some glaringly obvious fact that I'm overlooking?  
+Hopefully, rather, This tool is sound, and shall serve you well. 
+These files and folders are (mostly) organized, well-synchronized, safe and assuredly performative. They're all here now, and they're synchronized together perfectly, reliably, and operationally.  This PARTICULAR File, is the readme file, I'll keep updated with more mentions in an upcoming release. 
+
 ============================================================================
 
 Adventures in Coding :  Recently, I had this vague notion in mind that when 

@@ -1,0 +1,494 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTML Exporter</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            min-height: 100vh;
+            padding: 2rem;
+            color: #1f2937;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 24px 70px rgba(15, 23, 42, 0.25);
+            padding: 2.5rem;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .header svg {
+            width: 36px;
+            height: 36px;
+            color: #2563eb;
+        }
+
+        h1 {
+            font-size: 2.1rem;
+            font-weight: 700;
+            color: #0f172a;
+            letter-spacing: -0.02em;
+        }
+
+        .subtitle {
+            margin-top: 0.25rem;
+            color: #475569;
+            font-size: 0.95rem;
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: minmax(340px, 1.15fr) minmax(340px, 0.85fr);
+            gap: 2rem;
+        }
+
+        .panel {
+            background: #f8fafc;
+            border-radius: 14px;
+            padding: 1.75rem 2rem;
+            box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.15);
+        }
+
+        .panel h2 {
+            font-size: 1.35rem;
+            font-weight: 600;
+            color: #0f172a;
+            margin-bottom: 1.25rem;
+        }
+
+        .section-title {
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #64748b;
+            margin-bottom: 0.6rem;
+        }
+
+        .field-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.25rem;
+        }
+
+        label {
+            font-weight: 600;
+            color: #1f2937;
+            display: block;
+            margin-bottom: 0.4rem;
+            font-size: 0.92rem;
+        }
+
+        input[type="number"],
+        select,
+        textarea,
+        input[type="text"] {
+            width: 100%;
+            padding: 0.6rem 0.7rem;
+            border-radius: 10px;
+            border: 1px solid #d2d8e1;
+            background: #ffffff;
+            color: inherit;
+            font-size: 0.95rem;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        select:disabled,
+        input:disabled {
+            opacity: 0.75;
+            cursor: not-allowed;
+        }
+
+        input[type="color"]:disabled {
+            opacity: 1;
+        }
+
+        input[type="number"]:focus,
+        select:focus,
+        textarea:focus,
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+        }
+
+        input[type="number"] {
+            width: 90px;
+        }
+
+        textarea {
+            font-family: 'Fira Code', 'Consolas', 'Courier New', monospace;
+            line-height: 1.5;
+            resize: vertical;
+            min-height: 120px;
+            background: #0f172a;
+            color: #e2e8f0;
+            border: 1px solid #1e293b;
+        }
+
+        .font-select-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .checkbox-row {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        input[type="color"] {
+            width: 100%;
+            height: 42px;
+            border-radius: 10px;
+            border: 1px solid #d2d8e1;
+            background: #ffffff;
+        }
+
+        .color-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+        }
+
+        .color-control label {
+            margin-bottom: 0.35rem;
+            font-size: 0.9rem;
+        }
+
+        .button-row {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        button {
+            padding: 0.6rem 1.2rem;
+            border-radius: 12px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.92rem;
+            transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            color: #ffffff;
+            box-shadow: 0 14px 30px rgba(37, 99, 235, 0.35);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 18px 38px rgba(37, 99, 235, 0.4);
+        }
+
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #1f2937;
+            border: 1px solid rgba(148, 163, 184, 0.6);
+        }
+
+        .btn-secondary:hover {
+            background: #cbd5f5;
+            transform: translateY(-1px);
+        }
+
+        .status {
+            margin-top: 1.25rem;
+            padding: 0.85rem 1rem;
+            border-radius: 10px;
+            background: #e2e8f0;
+            border: 1px solid #cbd5f5;
+            color: #1e293b;
+            font-size: 0.9rem;
+        }
+
+        .status.success {
+            background: #dcfce7;
+            border-color: #34d399;
+            color: #065f46;
+        }
+
+        .status.error {
+            background: #fee2e2;
+            border-color: #f87171;
+            color: #991b1b;
+        }
+
+        .log-output {
+            margin-top: 1rem;
+            min-height: 160px;
+            max-height: 260px;
+            overflow-y: auto;
+            padding: 1rem;
+            border-radius: 10px;
+            background: #0f172a;
+            color: #e2e8f0;
+            font-family: 'Fira Code', 'Consolas', 'Courier New', monospace;
+            font-size: 0.86rem;
+            border: 1px solid #1e293b;
+            white-space: pre-wrap;
+        }
+
+        .list-divider {
+            border-top: 1px dashed rgba(148, 163, 184, 0.4);
+            margin: 1.5rem 0;
+        }
+
+        .helper-text {
+            font-size: 0.85rem;
+            color: #64748b;
+        }
+
+        @media (max-width: 1100px) {
+            .layout {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M5 4a3 3 0 0 0-3 3v7c0 1.1.9 2 2 2h1v-2H4V7a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v7h-1v2h1a2 2 0 0 0 2-2V7a3 3 0 0 0-3-3H5zm3 5 4 4 4-4h-3V3h-2v6H8zM5 18h14v2H5v-2z"/>
+            </svg>
+            <div>
+                <h1>HTML Exporter</h1>
+                <p class="subtitle">Configure presets or customize fonts and colors, then copy the generated command to run in your terminal.</p>
+            </div>
+        </div>
+
+        <div class="layout">
+            <section class="panel">
+                <h2>Style Settings</h2>
+                <form id="styleForm">
+                    <div class="section-title">Choose a style</div>
+                    <div class="field-group">
+                        <div>
+                            <label for="presetSelect">Style Presets</label>
+                            <select id="presetSelect">
+                                <option value="default">Default</option>
+                                <option value="style1">Style 1 - Evergreen</option>
+                                <option value="style2">Style 2 - Midnight</option>
+                                <option value="style3">Style 3 - Solar</option>
+                                <option value="style4">Style 4 - Mono</option>
+                                <option value="custom">Custom</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="maxWidthInput">Maximum characters per line</label>
+                            <input type="number" id="maxWidthInput" value="80" min="40" max="160" step="1">
+                            <p class="helper-text">Affects wrapping width in exported HTML.</p>
+                        </div>
+                    </div>
+
+                    <div class="section-title">Fonts</div>
+                    <div class="field-group">
+                        <div class="font-select-group" id="commentFontGroup">
+                            <label for="commentFontSelect">Comment font</label>
+                            <select id="commentFontSelect">
+                                <option value="'Bookman Old Style', serif">Default - 'Bookman Old Style', serif</option>
+                                <option value="'Georgia', serif">'Georgia', serif</option>
+                                <option value="'Palatino Linotype', 'Book Antiqua', serif">'Palatino Linotype', 'Book Antiqua', serif</option>
+                                <option value="'Times New Roman', Times, serif">'Times New Roman', Times, serif</option>
+                                <option value="'Source Serif Pro', serif">'Source Serif Pro', serif</option>
+                                <option value="'Helvetica Neue', Arial, sans-serif">'Helvetica Neue', Arial, sans-serif</option>
+                                <option value="'Segoe UI', Tahoma, Geneva, sans-serif">'Segoe UI', Tahoma, Geneva, sans-serif</option>
+                                <option value="'Arial Black', Gadget, sans-serif">'Arial Black', Gadget, sans-serif</option>
+                                <option value="'Verdana', Geneva, sans-serif">'Verdana', Geneva, sans-serif</option>
+                                <option value="'Optima', 'Segoe UI', sans-serif">'Optima', 'Segoe UI', sans-serif</option>
+                                <option value="'Cambria', Georgia, serif">'Cambria', Georgia, serif</option>
+                                <option value="'Calibri', Candara, sans-serif">'Calibri', Candara, sans-serif</option>
+                                <option value="'Franklin Gothic Medium', 'Arial Narrow', sans-serif">'Franklin Gothic Medium', 'Arial Narrow', sans-serif</option>
+                                <option value="'Rockwell', 'Courier Bold', serif">'Rockwell', 'Courier Bold', serif</option>
+                                <option value="'Baskerville', 'Baskerville Old Face', serif">'Baskerville', 'Baskerville Old Face', serif</option>
+                                <option value="'Futura', 'Century Gothic', sans-serif">'Futura', 'Century Gothic', sans-serif</option>
+                                <option value="'Didot', 'Didot LT STD', serif">'Didot', 'Didot LT STD', serif</option>
+                                <option value="'Bodoni MT', 'Bodoni 72', serif">'Bodoni MT', 'Bodoni 72', serif</option>
+                                <option value="'Copperplate', 'Copperplate Gothic', sans-serif">'Copperplate', 'Copperplate Gothic', sans-serif</option>
+                                <option value="'Brush Script MT', cursive">'Brush Script MT', cursive</option>
+                                <option value="'Gill Sans', 'Gill Sans MT', sans-serif">'Gill Sans', 'Gill Sans MT', sans-serif</option>
+                                <option value="'Lora', 'Times New Roman', serif">'Lora', 'Times New Roman', serif</option>
+                                <option value="'Merriweather', serif">'Merriweather', serif</option>
+                                <option value="'Playfair Display', serif">'Playfair Display', serif</option>
+                                <option value="'IBM Plex Serif', serif">'IBM Plex Serif', serif</option>
+                                <option value="'Charter', 'Bitstream Charter', serif">'Charter', 'Bitstream Charter', serif</option>
+                                <option value="'Libre Baskerville', serif">'Libre Baskerville', serif</option>
+                                <option value="'PT Serif', serif">'PT Serif', serif</option>
+                            </select>
+                        </div>
+                        <div class="font-select-group" id="codeFontGroup">
+                            <label for="codeFontSelect">Code font</label>
+                            <select id="codeFontSelect">
+                                <option value="'Courier New', Courier, monospace">Default - 'Courier New', Courier, monospace</option>
+                                <option value="'Fira Code', 'Courier New', monospace">'Fira Code', 'Courier New', monospace</option>
+                                <option value="'Source Code Pro', 'Courier New', monospace">'Source Code Pro', 'Courier New', monospace</option>
+                                <option value="'Consolas', 'Courier New', monospace">'Consolas', 'Courier New', monospace</option>
+                                <option value="'Lucida Console', Monaco, monospace">'Lucida Console', Monaco, monospace</option>
+                                <option value="'IBM Plex Mono', 'Courier New', monospace">'IBM Plex Mono', 'Courier New', monospace</option>
+                                <option value="'Inconsolata', monospace">'Inconsolata', monospace</option>
+                                <option value="'JetBrains Mono', monospace">'JetBrains Mono', monospace</option>
+                                <option value="'Monaco', 'Lucida Console', monospace">'Monaco', 'Lucida Console', monospace</option>
+                                <option value="'Andale Mono', monospace">'Andale Mono', monospace</option>
+                                <option value="'Menlo', 'Consolas', monospace">'Menlo', 'Consolas', monospace</option>
+                                <option value="'Ubuntu Mono', monospace">'Ubuntu Mono', monospace</option>
+                                <option value="'PT Mono', monospace">'PT Mono', monospace</option>
+                                <option value="'Cascadia Code', monospace">'Cascadia Code', monospace</option>
+                                <option value="'Droid Sans Mono', monospace">'Droid Sans Mono', monospace</option>
+                                <option value="'Anonymous Pro', monospace">'Anonymous Pro', monospace</option>
+                                <option value="'Cutive Mono', monospace">'Cutive Mono', monospace</option>
+                                <option value="'Space Mono', monospace">'Space Mono', monospace</option>
+                                <option value="'Input Mono', monospace">'Input Mono', monospace</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="field-group">
+                        <div>
+                            <label for="commentFontSizeInput">Comment font size (pt)</label>
+                            <input type="number" id="commentFontSizeInput" min="6" max="24" step="1">
+                        </div>
+                        <div>
+                            <label for="codeFontSizeInput">Code font size (pt)</label>
+                            <input type="number" id="codeFontSizeInput" min="6" max="24" step="1">
+                        </div>
+                    </div>
+
+                    <div class="field-group">
+                        <div class="checkbox-row">
+                            <label><input type="checkbox" id="commentBold"> Comment bold</label>
+                        </div>
+                        <div class="checkbox-row">
+                            <label><input type="checkbox" id="commentItalic"> Comment italic</label>
+                        </div>
+                        <div class="checkbox-row">
+                            <label><input type="checkbox" id="codeBold"> Code bold</label>
+                        </div>
+                        <div class="checkbox-row">
+                            <label><input type="checkbox" id="codeItalic"> Code italic</label>
+                        </div>
+                    </div>
+
+                    <div class="section-title">Syntax colors</div>
+                    <div class="color-grid">
+                        <div class="color-control">
+                            <label for="commentColor">Comments</label>
+                            <input type="color" id="commentColor" value="#228b22">
+                        </div>
+                        <div class="color-control">
+                            <label for="keywordColor">Keywords</label>
+                            <input type="color" id="keywordColor" value="#0000ff">
+                        </div>
+                        <div class="color-control">
+                            <label for="stringColor">Strings</label>
+                            <input type="color" id="stringColor" value="#a31515">
+                        </div>
+                        <div class="color-control">
+                            <label for="numberColor">Numbers</label>
+                            <input type="color" id="numberColor" value="#098658">
+                        </div>
+                        <div class="color-control">
+                            <label for="functionColor">Functions</label>
+                            <input type="color" id="functionColor" value="#795e26">
+                        </div>
+                        <div class="color-control">
+                            <label for="typeColor">Types</label>
+                            <input type="color" id="typeColor" value="#267f99">
+                        </div>
+                        <div class="color-control">
+                            <label for="variableColor">Variables</label>
+                            <input type="color" id="variableColor" value="#001080">
+                        </div>
+                        <div class="color-control">
+                            <label for="operatorColor">Operators</label>
+                            <input type="color" id="operatorColor" value="#000000">
+                        </div>
+                    </div>
+
+                    <div class="button-row">
+                        <button type="submit" class="btn-primary">Update command</button>
+                        <button type="button" class="btn-secondary" id="restorePresetBtn">Restore preset values</button>
+                    </div>
+                </form>
+            </section>
+
+            <section class="panel">
+                <h2>Command Builder</h2>
+                <p class="helper-text">Copy the command you need and run it inside your project directory.</p>
+
+                <label for="npmCommandOutput">npm script command</label>
+                <textarea id="npmCommandOutput" readonly></textarea>
+                <div class="button-row">
+                    <button type="button" class="btn-secondary" id="copyNpmBtn">Copy npm command</button>
+                </div>
+
+                <div class="list-divider"></div>
+
+                <label for="nodeCommandOutput">Direct node command</label>
+                <textarea id="nodeCommandOutput" readonly></textarea>
+                <div class="button-row">
+                    <button type="button" class="btn-secondary" id="copyNodeBtn">Copy node command</button>
+                </div>
+
+                <div class="list-divider"></div>
+
+                <label for="styleJsonOutput">Style profile JSON</label>
+                <textarea id="styleJsonOutput" readonly></textarea>
+                <p class="helper-text">This JSON is already encoded into base64 for <code>--style-config-b64</code>. Save it to reuse custom presets.</p>
+
+                <div class="button-row">
+                    <button type="button" class="btn-secondary" id="savePresetBtn">Save preset (.json)</button>
+                    <button type="button" class="btn-secondary" id="loadPresetBtn">Load preset (.json)</button>
+                </div>
+                <input type="file" id="loadPresetInput" accept="application/json" hidden>
+
+                <div class="status" id="statusMessage">Ready.</div>
+
+                <div class="log-output" id="runLog" aria-live="polite"></div>
+                <div class="button-row">
+                    <button type="button" class="btn-secondary" id="clearLogBtn">Clear log</button>
+                </div>
+            </section>
+        </div>
+    </div>
+    <script src="code-presenter-core.js"></script>
+    <script src="StylePresets/presets-manifest.js"></script>
+    <script src="html-exporter-app.js"></script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+

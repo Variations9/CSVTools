@@ -2,6 +2,19 @@
 
 let core = null;
 
+function pickCoreModule(candidate) {
+    if (!candidate) {
+        return null;
+    }
+    if (typeof candidate.formatCode === 'function') {
+        return candidate;
+    }
+    if (candidate.default && typeof candidate.default.formatCode === 'function') {
+        return candidate.default;
+    }
+    return null;
+}
+
 async function loadCore() {
     if (core && typeof core.formatCode === 'function') {
         return core;
@@ -13,39 +26,45 @@ async function loadCore() {
     }
 
     if (typeof require === 'function') {
-        try {
-            const required = require('./code-presenter-core');
-            if (required && typeof required.formatCode === 'function') {
-                core = required;
-                return core;
+        const requireCandidates = [
+            './code-presenter-core',
+            './StylePresets/code-presenter-core'
+        ];
+
+        for (const candidate of requireCandidates) {
+            try {
+                const resolved = pickCoreModule(require(candidate));
+                if (resolved) {
+                    core = resolved;
+                    return core;
+                }
+            } catch (error) {
+                // Keep trying other locations
             }
-            if (required && typeof required.default === 'object' && typeof required.default.formatCode === 'function') {
-                core = required.default;
-                return core;
-            }
-            if (typeof globalThis !== 'undefined' && globalThis.CodePresenterCore && typeof globalThis.CodePresenterCore.formatCode === 'function') {
-                core = globalThis.CodePresenterCore;
-                return core;
-            }
-        } catch (error) {
-            
         }
 
         try {
             const { pathToFileURL } = require('url');
             const path = require('path');
-            const moduleUrl = pathToFileURL(path.join(__dirname, 'code-presenter-core.js'));
-            const imported = await import(moduleUrl.href || moduleUrl.toString());
-            if (imported) {
-                if (imported.default && typeof imported.default.formatCode === 'function') {
-                    core = imported.default;
-                    return core;
-                }
-                if (typeof imported.formatCode === 'function') {
-                    core = imported;
-                    return core;
+            const modulePaths = [
+                path.join(__dirname, 'code-presenter-core.js'),
+                path.join(__dirname, 'StylePresets', 'code-presenter-core.js')
+            ];
+
+            for (const modulePath of modulePaths) {
+                try {
+                    const moduleUrl = pathToFileURL(modulePath);
+                    const imported = await import(moduleUrl.href || moduleUrl.toString());
+                    const resolved = pickCoreModule(imported);
+                    if (resolved) {
+                        core = resolved;
+                        return core;
+                    }
+                } catch (innerError) {
+                    // Try the next candidate
                 }
             }
+
             if (typeof globalThis !== 'undefined' && globalThis.CodePresenterCore && typeof globalThis.CodePresenterCore.formatCode === 'function') {
                 core = globalThis.CodePresenterCore;
                 return core;
@@ -125,6 +144,371 @@ const MAX_SOURCE_LENGTH_BY_EXTENSION = new Map([
     ['.json', 100_000_000],
     ['.csv', 20_000_000]
 ]);
+
+const STYLE_PROFILES = {
+    default: {
+        name: 'default',
+        displayName: 'Default',
+        maxWidth: DEFAULT_MAX_WIDTH
+    },
+    style1: {
+        name: 'style1',
+        displayName: 'Style 1 - Evergreen',
+        maxWidth: 76,
+        colors: {
+            comment: '#047857',
+            keyword: '#1d4ed8',
+            string: '#b91c1c',
+            number: '#0f766e',
+            function: '#9333ea',
+            type: '#2563eb',
+            variable: '#7c3aed',
+            operator: '#111827'
+        },
+        fontSizes: {
+            comment: 11,
+            code: 13
+        },
+        fonts: {
+            comment: '"Georgia", serif',
+            code: '"Fira Code", "Courier New", monospace'
+        },
+        fontStyles: {
+            commentBold: false,
+            commentItalic: true,
+            codeBold: false,
+            codeItalic: false
+        }
+    }
+};
+
+const STYLE_PRESET_DIR_NAME = 'StylePresets';
+const STYLE_PRESET_MANIFEST_JSON = 'presets-manifest.json';
+const STYLE_PRESET_MANIFEST_JS = 'presets-manifest.js';
+const STYLE_PRESET_DIR = pathModule ? pathModule.join(__dirname, STYLE_PRESET_DIR_NAME) : null;
+
+function slugifyPresetKey(value, fallback = 'preset') {
+    if (!value || typeof value !== 'string') {
+        return fallback;
+    }
+    const slug = value
+        .toLowerCase()
+        .trim()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+    return slug || fallback;
+}
+
+function ensureUniquePresetKey(baseKey) {
+    const base = slugifyPresetKey(baseKey);
+    let candidate = base;
+    let counter = 2;
+    while (STYLE_PROFILES[candidate]) {
+        candidate = `${base}-${counter}`;
+        counter += 1;
+    }
+    return candidate;
+}
+
+function clampPresetWidth(value, fallback) {
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric)) {
+        return typeof fallback === 'number' ? fallback : DEFAULT_MAX_WIDTH;
+    }
+    return Math.max(40, Math.min(200, Math.round(numeric)));
+}
+
+function normalizeExternalProfile(source, fallbackKey, fallbackDisplayName) {
+    if (!source || typeof source !== 'object') {
+        return null;
+    }
+    const base = cloneStyleProfile(STYLE_PROFILES.default);
+    const profile = source.profile && typeof source.profile === 'object' ? source.profile : source;
+
+    const normalized = cloneStyleProfile(base) || {};
+    normalized.name = fallbackKey || source.name || source.displayName || 'preset';
+    normalized.displayName = source.displayName || source.name || fallbackDisplayName || normalized.name;
+    normalized.maxWidth = clampPresetWidth(profile.maxWidth, base.maxWidth);
+    normalized.colors = {
+        ...base.colors,
+        ...(profile.colors || {})
+    };
+    normalized.fontSizes = {
+        ...base.fontSizes,
+        ...(profile.fontSizes || {})
+    };
+    normalized.fonts = {
+        ...base.fonts,
+        ...(profile.fonts || {})
+    };
+    normalized.fontStyles = {
+        ...base.fontStyles,
+        ...(profile.fontStyles || {})
+    };
+
+    return normalized;
+}
+
+async function writeStylePresetManifests(presets) {
+    if (!STYLE_PRESET_DIR || !fs || !pathModule) {
+        return;
+    }
+    await fs.promises.mkdir(STYLE_PRESET_DIR, { recursive: true });
+    const manifestPayload = {
+        presets: presets.map(entry => ({
+            key: entry.key,
+            name: entry.displayName || entry.key,
+            displayName: entry.displayName || entry.key,
+            fileName: entry.fileName,
+            profile: entry.profile
+        }))
+    };
+    const manifestJsonPath = pathModule.join(STYLE_PRESET_DIR, STYLE_PRESET_MANIFEST_JSON);
+    const manifestJsPath = pathModule.join(STYLE_PRESET_DIR, STYLE_PRESET_MANIFEST_JS);
+
+    await fs.promises.writeFile(manifestJsonPath, JSON.stringify(manifestPayload, null, 2), 'utf8');
+    const jsContent = `window.HTML_EXPORTER_PRESETS = ${JSON.stringify(manifestPayload.presets, null, 2)};\n`;
+    await fs.promises.writeFile(manifestJsPath, jsContent, 'utf8');
+}
+
+async function registerStylePresetsFromDisk() {
+    if (!STYLE_PRESET_DIR || !fs || !pathModule) {
+        return [];
+    }
+    try {
+        await fs.promises.mkdir(STYLE_PRESET_DIR, { recursive: true });
+    } catch (error) {
+        console.warn('Unable to ensure style preset directory exists:', error.message || error);
+        return [];
+    }
+    let dirEntries = [];
+    try {
+        dirEntries = await fs.promises.readdir(STYLE_PRESET_DIR, { withFileTypes: true });
+    } catch (error) {
+        console.warn('Unable to read style preset directory:', error.message || error);
+        dirEntries = [];
+    }
+
+    const loaded = [];
+    for (const entry of dirEntries) {
+        if (!entry.isFile() || !/\.json$/i.test(entry.name)) {
+            continue;
+        }
+        if (entry.name.toLowerCase() === STYLE_PRESET_MANIFEST_JSON.toLowerCase()) {
+            continue;
+        }
+        const filePath = pathModule.join(STYLE_PRESET_DIR, entry.name);
+        try {
+            const raw = await fs.promises.readFile(filePath, 'utf8');
+            const parsed = JSON.parse(raw);
+            const keyBase = parsed.key || parsed.name || parsed.displayName || entry.name.replace(/\.json$/i, '');
+            const uniqueKey = ensureUniquePresetKey(keyBase);
+            const normalized = normalizeExternalProfile(parsed, uniqueKey, parsed.displayName || parsed.name);
+            if (!normalized) {
+                continue;
+            }
+            normalized.name = uniqueKey;
+            normalized.displayName = normalized.displayName || uniqueKey;
+            STYLE_PROFILES[uniqueKey] = normalized;
+            loaded.push({
+                key: uniqueKey,
+                displayName: normalized.displayName,
+                fileName: entry.name,
+                profile: {
+                    maxWidth: normalized.maxWidth,
+                    colors: normalized.colors,
+                    fontSizes: normalized.fontSizes,
+                    fonts: normalized.fonts,
+                    fontStyles: normalized.fontStyles
+                }
+            });
+        } catch (error) {
+            console.warn(`Failed to load style preset "${entry.name}":`, error.message || error);
+        }
+    }
+
+    try {
+        await writeStylePresetManifests(loaded);
+    } catch (error) {
+        console.warn('Unable to write style preset manifest:', error.message || error);
+    }
+
+    return loaded;
+}
+
+function cloneStyleProfile(profile) {
+    if (!profile) {
+        return null;
+    }
+    return {
+        name: profile.name,
+        displayName: profile.displayName,
+        maxWidth: profile.maxWidth,
+        colors: profile.colors ? { ...profile.colors } : undefined,
+        fontSizes: profile.fontSizes ? { ...profile.fontSizes } : undefined,
+        fonts: profile.fonts ? { ...profile.fonts } : undefined,
+        fontStyles: profile.fontStyles ? { ...profile.fontStyles } : undefined
+    };
+}
+
+function resolveStyleProfile(styleName) {
+    const key = typeof styleName === 'string' && styleName.trim()
+        ? styleName.trim().toLowerCase()
+        : 'default';
+    const profile = STYLE_PROFILES[key] || STYLE_PROFILES.default;
+    return cloneStyleProfile(profile);
+}
+
+function createFormatOptions(styleProfile) {
+    const profile = styleProfile || resolveStyleProfile();
+    if (!profile.name) {
+        profile.name = 'custom';
+    }
+    if (!profile.displayName) {
+        profile.displayName = profile.name === 'custom' ? 'Custom' : profile.name;
+    }
+    const maxWidth = typeof profile.maxWidth === 'number' ? profile.maxWidth : DEFAULT_MAX_WIDTH;
+
+    const formatOptions = { maxWidth };
+
+    if (profile.colors) {
+        formatOptions.colors = profile.colors;
+    }
+    if (profile.fontSizes) {
+        formatOptions.fontSizes = profile.fontSizes;
+    }
+    if (profile.fonts) {
+        formatOptions.fonts = profile.fonts;
+    }
+    if (profile.fontStyles) {
+        formatOptions.fontStyles = profile.fontStyles;
+    }
+
+    return {
+        formatOptions,
+        maxWidth,
+        profile
+    };
+}
+
+function parseCliArgs(argv) {
+    const args = Array.isArray(argv) ? argv : [];
+    const result = {};
+    let fallbackStyleToken = null;
+
+    function assignStyleProfile(profile) {
+        if (profile && typeof profile === 'object') {
+            result.styleProfile = profile;
+        }
+    }
+
+    function parseJsonValue(rawValue, label) {
+        try {
+            return JSON.parse(rawValue);
+        } catch (error) {
+            throw new Error(`Unable to parse ${label}: ${error.message}`);
+        }
+    }
+
+    function parseBase64JsonValue(rawValue, label) {
+        try {
+            const decoded = Buffer.from(rawValue, 'base64').toString('utf8');
+            return parseJsonValue(decoded, label);
+        } catch (error) {
+            throw new Error(`Unable to decode ${label}: ${error.message}`);
+        }
+    }
+
+    for (let i = 0; i < args.length; i += 1) {
+        const current = args[i];
+        if (current === '--style' && typeof args[i + 1] === 'string') {
+            result.styleName = args[i + 1];
+            i += 1;
+            continue;
+        }
+        if (typeof current === 'string' && current.startsWith('--style=')) {
+            result.styleName = current.slice(8);
+            continue;
+        }
+
+        if (current === '--style-config' && typeof args[i + 1] === 'string') {
+            assignStyleProfile(parseJsonValue(args[i + 1], 'style-config'));
+            i += 1;
+            continue;
+        }
+        if (typeof current === 'string' && current.startsWith('--style-config=')) {
+            assignStyleProfile(parseJsonValue(current.slice('--style-config='.length), 'style-config'));
+            continue;
+        }
+
+        if (current === '--style-config-b64' && typeof args[i + 1] === 'string') {
+            assignStyleProfile(parseBase64JsonValue(args[i + 1], 'style-config-b64'));
+            i += 1;
+            continue;
+        }
+        if (typeof current === 'string' && current.startsWith('--style-config-b64=')) {
+            assignStyleProfile(parseBase64JsonValue(current.slice('--style-config-b64='.length), 'style-config-b64'));
+            continue;
+        }
+
+        if (typeof current === 'string' && !current.startsWith('-') && !current.startsWith('/')) {
+            if (!fallbackStyleToken) {
+                fallbackStyleToken = current;
+            }
+        }
+    }
+
+    if (!result.styleProfile) {
+        const candidates = [];
+        if (fallbackStyleToken) {
+            candidates.push(fallbackStyleToken);
+        }
+        for (const token of args) {
+            if (typeof token === 'string' && !token.startsWith('-') && !token.startsWith('/')) {
+                candidates.push(token);
+            }
+        }
+        for (const token of candidates) {
+            const trimmed = typeof token === 'string' ? token.trim() : '';
+            if (!trimmed) {
+                continue;
+            }
+            if (trimmed.startsWith('{')) {
+                try {
+                    assignStyleProfile(parseJsonValue(trimmed, 'style-config'));
+                    if (!result.styleName) {
+                        result.styleName = 'custom';
+                    }
+                    break;
+                } catch (error) {
+                    // Ignore invalid inline JSON payloads
+                }
+            }
+            if (/^[A-Za-z0-9+/=]+$/.test(trimmed)) {
+                try {
+                    assignStyleProfile(parseBase64JsonValue(trimmed, 'style-config-b64'));
+                    if (!result.styleName) {
+                        result.styleName = 'custom';
+                    }
+                    break;
+                } catch (error) {
+                    // Ignore invalid base64 payloads
+                }
+            }
+        }
+    }
+
+    if (result.styleProfile && typeof result.styleProfile === 'object') {
+        if (!result.styleProfile.name) {
+            result.styleProfile.name = 'custom';
+        }
+        if (!result.styleProfile.displayName) {
+            result.styleProfile.displayName = 'Custom';
+        }
+    }
+
+    return result;
+}
 
 function toAnchorId(text, index) {
     const base = text
@@ -295,7 +679,7 @@ function formatLargePlainText(sourceCode, { language, relativePath }) {
     };
 }
 
-function formatSourceContent(sourceCode, { language, relativePath }) {
+function formatSourceContent(sourceCode, { language, relativePath }, formatOptions = { maxWidth: DEFAULT_MAX_WIDTH }) {
     if (language === 'json') {
         return formatJsonViewerPage(sourceCode, { relativePath });
     }
@@ -304,11 +688,27 @@ function formatSourceContent(sourceCode, { language, relativePath }) {
         return formatLargePlainText(sourceCode, { language, relativePath });
     }
 
-    const result = core.formatCode({
+    const chosenOptions = formatOptions || { maxWidth: DEFAULT_MAX_WIDTH };
+    const formatConfig = {
         code: sourceCode,
         language,
-        maxWidth: DEFAULT_MAX_WIDTH
-    });
+        maxWidth: typeof chosenOptions.maxWidth === 'number' ? chosenOptions.maxWidth : DEFAULT_MAX_WIDTH
+    };
+
+    if (chosenOptions.colors) {
+        formatConfig.colors = chosenOptions.colors;
+    }
+    if (chosenOptions.fontSizes) {
+        formatConfig.fontSizes = chosenOptions.fontSizes;
+    }
+    if (chosenOptions.fonts) {
+        formatConfig.fonts = chosenOptions.fonts;
+    }
+    if (chosenOptions.fontStyles) {
+        formatConfig.fontStyles = chosenOptions.fontStyles;
+    }
+
+    const result = core.formatCode(formatConfig);
 
     if (typeof result.lineCount !== 'number') {
         result.lineCount = Array.isArray(result.lines) ? result.lines.length : countLines(sourceCode);
@@ -700,6 +1100,8 @@ function generateIndexHtml(entries, options) {
     const generatedAt = options.generatedAt;
     const projectName = options.projectName || getProjectName();
     const manifestPath = options.manifestPath;
+    const styleLabel = options.styleName || options.styleKey || 'default';
+    const maxWidthLabel = typeof options.maxWidth === 'number' ? options.maxWidth : DEFAULT_MAX_WIDTH;
     const sortedEntries = [...entries].sort((a, b) => a.outputRelativePath.localeCompare(b.outputRelativePath));
 
     const directoryMap = new Map();
@@ -884,6 +1286,7 @@ function generateIndexHtml(entries, options) {
     <header>
         <h1>${escape(projectName)}</h1>
         <p class="subtitle">Generated: ${escape(new Date(generatedAt).toLocaleString())}</p>
+        <p class="subtitle">Style: ${escape(styleLabel)} (max width: ${maxWidthLabel} chars)</p>
     </header>
 
     <div class="content-wrapper">
@@ -977,8 +1380,39 @@ async function exportProjectWithAccessor(accessor, options = {}) {
     const sourceRoot = options.sourceRoot || SOURCE_FOLDER;
     const projectName = getProjectName();
     const outputBase = getOutputRootRelativePath();
+    const requestedStyleName = typeof options.styleName === 'string' ? options.styleName.trim() : '';
+    const normalizedStyleKey = requestedStyleName.toLowerCase();
+    const hasCustomProfile = options.styleProfile && typeof options.styleProfile === 'object';
+
+    try {
+        const externalPresets = await registerStylePresetsFromDisk();
+        if (externalPresets.length > 0) {
+            const label = externalPresets.length === 1 ? 'preset' : 'presets';
+            console.log(`Loaded ${externalPresets.length} external style ${label} from ${STYLE_PRESET_DIR_NAME}.`);
+        }
+    } catch (error) {
+        console.warn('Unable to load external style presets:', error.message || error);
+    }
+
+    if (requestedStyleName && !STYLE_PROFILES[normalizedStyleKey] && !hasCustomProfile) {
+        console.warn(`Warning: Unknown style "${requestedStyleName}". Falling back to default.`);
+    }
+
+    const baseProfile = hasCustomProfile
+        ? cloneStyleProfile({
+            ...resolveStyleProfile(normalizedStyleKey),
+            ...options.styleProfile
+        })
+        : resolveStyleProfile(normalizedStyleKey);
+    const {
+        formatOptions: activeFormatOptions,
+        maxWidth: activeMaxWidth,
+        profile: appliedProfile
+    } = createFormatOptions(baseProfile);
+    const styleDisplayName = appliedProfile.displayName || appliedProfile.name || 'default';
 
     await loadCore();
+    console.log(`Using export style "${styleDisplayName}" (max width ${activeMaxWidth})`);
     await reportProgress(onProgress, { type: 'start' });
 
     // Scan the Source directory to find all files
@@ -1019,7 +1453,7 @@ async function exportProjectWithAccessor(accessor, options = {}) {
             continue;
         }
 
-        const formatResult = formatSourceContent(sourceCode, { language, relativePath });
+        const formatResult = formatSourceContent(sourceCode, { language, relativePath }, activeFormatOptions);
         const lineCount = typeof formatResult.lineCount === 'number' ? formatResult.lineCount : countLines(sourceCode);
 
         if (formatResult.isPlainText) {
@@ -1065,7 +1499,12 @@ async function exportProjectWithAccessor(accessor, options = {}) {
     const generatedAt = new Date().toISOString();
     const manifestData = JSON.stringify({
         generatedAt,
-        maxWidth: DEFAULT_MAX_WIDTH,
+        maxWidth: activeMaxWidth,
+        style: {
+            key: appliedProfile.name || 'default',
+            label: styleDisplayName,
+            maxWidth: activeMaxWidth
+        },
         files: manifest
     }, null, 2);
 
@@ -1076,8 +1515,10 @@ async function exportProjectWithAccessor(accessor, options = {}) {
         generatedAt,
         outputDir: outputBase,
         manifestPath,
-        maxWidth: DEFAULT_MAX_WIDTH,
-        projectName
+        maxWidth: activeMaxWidth,
+        projectName,
+        styleName: styleDisplayName,
+        styleKey: appliedProfile.name || 'default'
     });
     const indexFileName = `${projectName}.html`;
     const indexPath = `${outputBase}/${indexFileName}`;
@@ -1205,7 +1646,15 @@ async function exportProject(options = {}) {
 }
 
 if (require.main === module) {
-    exportProject().catch(error => {
+    let cliOptions = {};
+    try {
+        cliOptions = parseCliArgs(process.argv.slice(2));
+    } catch (error) {
+        console.error('Failed to parse command-line arguments:', error.message || error);
+        process.exit(1);
+    }
+
+    exportProject(cliOptions).catch(error => {
         console.error('Export failed:', error.message || error);
         process.exit(1);
     });

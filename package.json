@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "export": "node Source/Tools/HTMLTools/export-project-direct-scan.cjs",
+    "export:style1": "node Source/Tools/HTMLTools/export-project-direct-scan.cjs --style=style1",
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",
