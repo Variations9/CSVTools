@@ -11,13 +11,20 @@ Project Wiki Page .html Generator, making a web page of everything in /Source.
 ============================================================================
 
  * Developed by Variations9@Github, Production Artist.
- 
-Development, variations, (deviations), and vibe-coding with the help of a.i., including Claude Code and GPT Codex was at play. This submission has been carefully curated and crafted into submission, whereupon the program works beautifully.  There are many adventures throughout thid development processes that are worth in-depth future discussion.
 
-These Folders are a result of care and consideration. If you're reading this and can understand code somewhat, these containing files might make some sense. Regardless, the tools themselves shall have the promise to be quite useful.
+Disclaimer:
+Development, variations, (deviations), and vibe-coding with some help of a.i., including Claude Code and GPT Codex at play. This submission has been carefully curated and crafted into submission, whereupon the program works beautifully.  There are many adventures throughout this development processes that are worth in-depth future discussions, however For now, these folders are a result of care and consideration. The tools within shall have the promise to be quite useful.
 
-These files and folders are (mostly) organized, well-synchronized, safe and assuredly performative. They're all here now, and they're synchronized together perfectly, reliably, and operationally.  This PARTICULAR File, is the readme file, I'll keep updated with more mentions in an upcoming release. 
+These files and folders are (mostly) organized, well-synchronized, safe and assuredly performative. They're synchronized together perfectly, reliably, and operationally.  This PARTICULAR File, is the readme file, I'll keep updated with more mentions in an upcoming release. 
 
+What is included is a set of tool packages in here that, when combined with the function
+of node.js, and when running terminal commands in the project, will generate
+a spreadsheet .csv file of however massive your project is, with factoids and data
+statistics about the scripts contained within. Use a running spreadsheet to keep
+a consistent chart & roadmap to provide a companion snapshot of your entire project.
+
+Or, maybe you want to export your project into a readable code-viewer wiki page?
+It's here for your use!
 ============================================================================
 
 Adventures in Coding :  Recently, I had this vague notion in mind that when 
@@ -36,6 +43,8 @@ https://docs.google.com/spreadsheets/d/1Q9vF2L3K6D2Ptg94kgfpupGikGkF27CcwyihWiLb
 
 Another larger Example Spreadsheet is viewable at:
 https://docs.google.com/spreadsheets/d/1Kwc429QBrfUCZzyB1BlzLp7wd16pyS14G42Fn7DgMm0/edit?usp=sharing
+
+This google-sheet is my current example .csv spreadsheet for a separate estimator tool project I've been working on lately, 
 
 
 Uses Node.js - (ensure that node.js is installed.)
@@ -60,7 +69,4 @@ node Source/Tools/CSVTools/update-csv-workflow.mjs 2>&1 | tee Documentation/logs
 After Generating the new .csv, you can rename it, and replace it with this existing
 /Source/ProjectMap/SourceFolder.csv.
 
-( This file is my current example .csv spreadsheet for a masterful estimator tool project I've been working on lately, examples upon request.) 
-
-View Spreadsheets by importing the .csv into Google Sheets.
-Additional questions?  call / email me!
+View Spreadsheets by importing the .csv into Google Sheets, organize rows / columns layout view further, perform sorts, and more.
