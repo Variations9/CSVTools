@@ -1,0 +1,21 @@
+{
+  "name": "html-export-tools",
+  "version": "1.0.0",
+  "description": "Tools for exporting project code to formatted HTML documentation",
+  "type": "module",
+  "scripts": {
+    "export": "node export-project-direct-scan.cjs",
+    "export:style1": "node export-project-direct-scan.cjs --style=style1"
+  },
+  "keywords": [
+    "html",
+    "export",
+    "documentation",
+    "code-presentation"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "prettier": "^3.6.2"
+  }
+}
