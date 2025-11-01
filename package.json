@@ -3,12 +3,19 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "export": "node Source/Tools/HTMLTools/export-project-direct-scan.cjs",
-    "export:style1": "node Source/Tools/HTMLTools/export-project-direct-scan.cjs --style=style1",
+    "export": "npm run html:export",
+    "export:style1": "npm run html:export-style1",
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",
-    "test:watch": "vitest --watch"
+    "test:watch": "vitest --watch",
+    "html:export": "npm --prefix Source/Tools run html:export",
+    "html:export-style1": "npm --prefix Source/Tools run html:export-style1",
+    "csv:update": "node Source/Tools/CSVTools/update-csv-workflow.mjs",
+    "csv:sync": "node Source/Tools/CSVTools/sync-filesystem-to-csv.mjs",
+    "csv:preview": "node Source/Tools/CSVTools/preview-changes.mjs",
+    "csv:querier": "node Source/Tools/CSVTools/Querier.mjs",
+    "csv:help": "npm --prefix Source/Tools run csv:help"
   },
   "devDependencies": {
     "@vitest/coverage-v8": "^3.2.4",

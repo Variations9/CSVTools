@@ -404,7 +404,7 @@
         const profile = mergeWithDefaults(gatherProfileFromForm());
         const jsonPayload = stringifyProfile(profile);
         const base64Payload = encodeBase64(jsonPayload);
-        const npmCommand = `npm run export -- --style-config-b64 "${base64Payload}"`;
+        const npmCommand = `npm run html:export -- --style-config-b64 "${base64Payload}"`;
         const nodeCommand = `node Source/Tools/HTMLTools/export-project-direct-scan.cjs --style-config-b64 "${base64Payload}"`;
 
         return {

@@ -3,15 +3,13 @@ Install the VS Studio Extension called:
 "Draw Folder Structure" by Krivoox.
 Once Installed, select the root folder (the Source folder), by right-clicking, and then select : "Generate Markdown Structure" from the dropdown menu.
 
-Next, you can use the Source/Tools/CSVTools/Folder-Tree-to-Spreadsheet-Converter.html tool to convert it into a .csv file.
-Or
-Just keep this example SourceFolder.csv file in the Source/ProjectMap folder, proceeding forward. The automations will 
-be able to compare your folder with this existing .csv file, and apply the changes / differences, generating a new .csv automatically.
-
-Here's the FolderStructure.md :
+Here's the FolderStructure.md for this Project:
 
 ```
 └── 📁Source
+    └── 📁Documentation
+        ├── Documentation.md
+        ├── Terminal Commands.md
     └── 📁ProjectMap
         ├── FolderStructure.md
         ├── SourceFolder.csv
@@ -24,8 +22,8 @@ Here's the FolderStructure.md :
                 ├── save-result.mjs
                 ├── table-helpers.mjs
             ├── CSVEditor.html
+            ├── Folder-Tree-csv-to-Google-Sheets-Converter.html
             ├── Folder-Tree-to-Spreadsheet-Converter.html
-            ├── FolderTreeCSVToGoogleSheetsConverter.html
             ├── generate-llm-dataset.mjs
             ├── package.json
             ├── preview-changes.mjs
@@ -43,6 +41,7 @@ Here's the FolderStructure.md :
             ├── update-csv-workflow-with-coverage.mjs
             ├── update-csv-workflow.mjs
             ├── update-functions.mjs
+            ├── updateApiUsage.mjs
             ├── updateBehaviors.mjs
             ├── updateCyclomaticComplexity.mjs
             ├── updateDataFlow.mjs
@@ -54,5 +53,26 @@ Here's the FolderStructure.md :
             ├── updateLinesOfCodeCounter.mjs
             ├── updateOrderOfOperations.mjs
             ├── updateSideEffects.mjs
-            └── updateTestCoverage.mjs
+            ├── updateTestCoverage.mjs
+        └── 📁HTMLTools
+            └── 📁StylePresets
+                ├── alterations.json
+                ├── presets-manifest.js
+                ├── presets-manifest.json
+            ├── .DS_Store
+            ├── code-presenter-app.js
+            ├── code-presenter-core.js
+            ├── Code-Presenter.html
+            ├── Code-Wrapper_Tool_1.html
+            ├── export-project-direct-scan.cjs
+            ├── export-project.js
+            ├── html-exporter-app.js
+            ├── HTML-Exporter.html
+            ├── package.json
+        ├── .DS_Store
+        ├── .gitignore
+        ├── package-lock.json
+        ├── package.json
+    ├── .DS_Store
+    └── 1 ReadMe.md
 ```

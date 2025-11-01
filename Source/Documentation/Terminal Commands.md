@@ -1,10 +1,19 @@
 
-To Generate the new .csv file
-node Source/Tools/CSVTools/update-csv-workflow.mjs
+To Install:
 
-To generate the .csv file, saving the workflow to the logs folder
-node Source/Tools/CSVTools/update-csv-workflow.mjs 2>&1 | tee Documentation/logs/workflow-$(date +%Y%m%d-%H%M%S).log
+npm install
+
+
+To Generate the new .csv file:
+
+npm run csv:update
+
+The Result: It'll generate a .csv file with Date and Time stamp, saved in
+/Source/ProjectMap as SourceFolder(Date and Time).csv.  
+
 
 To generate a .html web page of the Source folder: 
-It'll generate a folder at the root level named "Distribution".
-npm run export
+
+npm run html:export
+
+The Result: It'll generate a folder at the root level named "Distribution" with containing web page.  Double-click on the .html page to view the table of contents.
