@@ -1,0 +1,33 @@
+{
+  "name": "project-tools",
+  "version": "1.0.0",
+  "description": "Unified package containing HTMLTools and CSVTools for project documentation and analysis",
+  "type": "module",
+  "private": true,
+  "workspaces": [
+    "HTMLTools",
+    "CSVTools"
+  ],
+  "scripts": {
+    "install-all": "npm install",
+    "html:export": "npm run export --workspace=HTMLTools",
+    "html:export-style1": "npm run export:style1 --workspace=HTMLTools",
+    "csv:update": "npm run update-csv --workspace=CSVTools",
+    "csv:sync": "npm run sync-files --workspace=CSVTools",
+    "csv:preview": "npm run preview --workspace=CSVTools",
+    "csv:querier": "npm run run-querier --workspace=CSVTools",
+    "csv:help": "npm run help --workspace=CSVTools",
+    "test": "echo 'Run tests in individual workspaces'",
+    "postinstall": "echo '\n✓ Tools installed successfully!\n\nHTMLTools commands:\n  npm run html:export\n  npm run html:export-style1\n\nCSVTools commands:\n  npm run csv:update\n  npm run csv:sync\n  npm run csv:preview\n  npm run csv:querier\n  npm run csv:help\n'"
+  },
+  "keywords": [
+    "tools",
+    "documentation",
+    "csv",
+    "html",
+    "export",
+    "project-map"
+  ],
+  "author": "",
+  "license": "MIT"
+}
