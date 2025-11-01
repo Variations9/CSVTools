@@ -9,7 +9,7 @@
 The CSV Project Map Toolkit is a sophisticated Node.js-based system that automatically generates and maintains a comprehensive "living map" of your entire codebase. It scans your project, extracts rich metadata across 24 analytical dimensions, and produces a detailed CSV/spreadsheet that serves as both documentation and a powerful analysis tool.
 
 **Developed by:** E. Harrison, Production & Technical Artist  
-**Bloviations, Vibe Codes and a.i. Commenting:** Claude (Anthropic) & ChatGPT Codex
+**Development, variations, (deviations), blovulations, vibe Codes and a.i.:** Claude (Anthropic) & ChatGPT Codex were at Play. Additional Special thanks to 
 
 ---
 
