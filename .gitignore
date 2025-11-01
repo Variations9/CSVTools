@@ -1,2 +1,23 @@
+# Images
 *.jpg
 *.png
+
+# Dependencies
+**/node_modules/
+
+# Lock files
+**/package-lock.json
+
+# OS files
+.DS_Store
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+npm-debug.log*
+
+# Temporary files
+*.tmp
+.cache/
