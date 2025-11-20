@@ -21,6 +21,19 @@ import path from 'node:path';
 const workspaceRoot = process.cwd();
 const csvOverride = process.env.CSV_PROJECT_MAP_PATH ?? '';
 const csvPath = resolveCsvPath(csvOverride);
+const MAX_FILE_SIZE_BYTES =
+  Number.isFinite(Number.parseInt(process.env.LOC_MAX_BYTES, 10)) &&
+  Number.parseInt(process.env.LOC_MAX_BYTES, 10) > 0
+    ? Number.parseInt(process.env.LOC_MAX_BYTES, 10)
+    : 100 * 1024 * 1024; // 100MB default cap to avoid extreme memory pressure
+const SKIP_PATH_SEGMENTS = new Set(
+  ['library', 'temp', 'logs', 'obj', 'build', 'builds', 'binaries'].map((segment) =>
+    segment.toLowerCase()
+  )
+);
+const MAX_SKIP_LOGS_PER_REASON = 20;
+const skipLogCounts = new Map(); // reason -> count
+const PROGRESS_EVERY_ROWS = 5000;
 
 // ============================================================================
 // SECTION 3: WORKFLOW ORCHESTRATION
@@ -86,6 +99,10 @@ async function main() {
   console.log(`Scanning ${table.length - 1} rows for line counts...\n`);
 
   for (let rowIndex = 1; rowIndex < table.length; rowIndex += 1) {
+    if (rowIndex % PROGRESS_EVERY_ROWS === 0) {
+      console.log(`  ...processed ${rowIndex} of ${table.length - 1} rows`);
+    }
+
     const row = table[rowIndex];
     if (!row || row.length === 0) {
       continue;
@@ -117,6 +134,31 @@ async function main() {
       ''
     );
     const absolutePath = path.join(workspaceRoot, relativePath);
+
+    const lowerSegments = pathSegments.map((segment) => segment.toLowerCase());
+    const excludedSegment = lowerSegments.find((segment) =>
+      SKIP_PATH_SEGMENTS.has(segment)
+    );
+    if (excludedSegment) {
+      recordSkip(relativePath, `excluded folder "${excludedSegment}"`);
+      continue;
+    }
+
+    let stats;
+    try {
+      stats = await fs.stat(absolutePath);
+    } catch (error) {
+      console.warn(`Skipping ${relativePath}: ${error.message}`);
+      continue;
+    }
+
+    if (stats.size > MAX_FILE_SIZE_BYTES) {
+      recordSkip(
+        relativePath,
+        `${stats.size} bytes exceeds ${MAX_FILE_SIZE_BYTES} byte limit`
+      );
+      continue;
+    }
 
     let source;
     try {
@@ -154,6 +196,7 @@ async function main() {
   if (updatedEntries.length === 0 && !rootRowChanged) {
     console.log('No LINES OF CODE updates were required.');
     console.log(`Project total (unchanged): ${projectTotal}`);
+    emitSkipSummary();
     return;
   }
 
@@ -175,6 +218,7 @@ async function main() {
   if (rootRowChanged) {
     console.log(`Project total lines of code: ${projectTotal}`);
   }
+  emitSkipSummary();
 }
 
 // ============================================================================
@@ -336,6 +380,27 @@ function resolveCsvPath(overridePath) {
   return path.join(workspaceRoot, 'Source/ProjectMap/SourceFolder.csv');
 }
 
+function recordSkip(relativePath, reason) {
+  const count = skipLogCounts.get(reason) ?? 0;
+  if (count < MAX_SKIP_LOGS_PER_REASON) {
+    console.log(`Skipping ${relativePath}: ${reason}`);
+    if (count === MAX_SKIP_LOGS_PER_REASON - 1) {
+      console.log(`...further skips for "${reason}" will be suppressed.`);
+    }
+  }
+  skipLogCounts.set(reason, count + 1);
+}
+
+function emitSkipSummary() {
+  if (skipLogCounts.size === 0) {
+    return;
+  }
+  console.log('\nSkip summary:');
+  for (const [reason, count] of skipLogCounts.entries()) {
+    console.log(` - ${reason}: ${count} file(s)`);
+  }
+}
+
 /**
  * Workflow bootstrap with fatal error handling.
  *
@@ -345,4 +410,3 @@ main().catch((error) => {
   console.error('Lines of code extraction failed:', error.message);
   process.exit(1);
 });
-

@@ -17,6 +17,64 @@ import {
 const csvOverride = process.env.CSV_PROJECT_MAP_PATH ?? '';
 // Workspace root directory for resolving relative file paths
 const workspaceRoot = process.cwd();
+const MAX_FILE_SIZE_BYTES =
+  Number.isFinite(Number.parseInt(process.env.FEATURES_MAX_BYTES, 10)) &&
+  Number.parseInt(process.env.FEATURES_MAX_BYTES, 10) > 0
+    ? Number.parseInt(process.env.FEATURES_MAX_BYTES, 10)
+    : 10 * 1024 * 1024; // 10MB cap to avoid loading giant/binary assets
+const BINARY_EXTENSIONS = new Set(
+  [
+    '.png',
+    '.jpg',
+    '.jpeg',
+    '.gif',
+    '.bmp',
+    '.tga',
+    '.tif',
+    '.tiff',
+    '.psd',
+    '.psb',
+    '.exr',
+    '.mp3',
+    '.wav',
+    '.ogg',
+    '.mp4',
+    '.mov',
+    '.avi',
+    '.mkv',
+    '.flac',
+    '.webm',
+    '.zip',
+    '.rar',
+    '.7z',
+    '.tar',
+    '.gz',
+    '.tgz',
+    '.xz',
+    '.dll',
+    '.exe',
+    '.so',
+    '.dylib',
+    '.lib',
+    '.unitypackage',
+    '.prefab',
+    '.unity',
+    '.asset',
+    '.fbx',
+    '.obj',
+    '.mtl',
+    '.blend',
+    '.c4d',
+  ].map((ext) => ext.toLowerCase())
+);
+const SKIP_PATH_SEGMENTS = new Set(
+  ['library', 'temp', 'logs', 'obj', 'build', 'builds', 'binaries'].map((segment) =>
+    segment.toLowerCase()
+  )
+);
+const MAX_SKIP_LOGS_PER_REASON = 20;
+const skipLogCounts = new Map(); // reason -> count
+const PROGRESS_EVERY_ROWS = 5000;
 
 // ============================================================================
 // SECTION 2: MAIN PROCESSING LOGIC
@@ -58,6 +116,9 @@ async function main() {
   let updated = 0;
   // Process each row in the CSV to generate feature synopses
   for (let rowIndex = 0; rowIndex < rows.length; rowIndex += 1) {
+    if (rowIndex % PROGRESS_EVERY_ROWS === 0 && rowIndex !== 0) {
+      console.log(`  ...processed ${rowIndex} of ${rows.length} rows`);
+    }
     const row = rows[rowIndex];
     if (!row) {
       continue;
@@ -81,6 +142,34 @@ async function main() {
     if (shouldSkipFeatureExtraction(fileExt)) {
       continue;
     }
+    // Skip heavy/binary/ignored paths before reading
+    const lowerSegments = relativePath.split(path.sep).map((segment) => segment.toLowerCase());
+    const excludedSegment = lowerSegments.find((segment) => SKIP_PATH_SEGMENTS.has(segment));
+    if (excludedSegment) {
+      recordSkip(relativePath, `excluded folder "${excludedSegment}"`);
+      continue;
+    }
+    if (BINARY_EXTENSIONS.has(fileExt)) {
+      recordSkip(relativePath, `binary extension ${fileExt}`);
+      continue;
+    }
+
+    let stats;
+    try {
+      stats = await fs.stat(absolutePath);
+    } catch (error) {
+      console.warn(`Skipping ${relativePath}: ${error.message}`);
+      continue;
+    }
+
+    if (stats.size > MAX_FILE_SIZE_BYTES) {
+      recordSkip(
+        relativePath,
+        `${stats.size} bytes exceeds ${MAX_FILE_SIZE_BYTES} byte limit`
+      );
+      continue;
+    }
+
     // Extract comment snippet from source file for additional context
     // This captures file-level documentation that may not be in other columns
     const commentSnippet = await extractCommentSnippet(absolutePath, fileExt);
@@ -115,11 +204,13 @@ async function main() {
   // Exit early if no updates needed
   if (updated === 0) {
     console.log('No FEATURES updates were required; column already reflects current metadata.');
+    emitSkipSummary();
     return;
   }
   // Write updated CSV back to disk with all synopses refreshed
   await writeCsvTable(csvPath, headers, rows);
   console.log(`Updated FEATURES column for ${updated} row(s).`);
+  emitSkipSummary();
 }
 
 // ============================================================================
@@ -474,6 +565,27 @@ function buildRelativePath(row, typeIndex) {
     return '';
   }
   return segments.reduce((acc, segment) => (acc ? path.join(acc, segment) : segment), '');
+}
+
+function recordSkip(relativePath, reason) {
+  const count = skipLogCounts.get(reason) ?? 0;
+  if (count < MAX_SKIP_LOGS_PER_REASON) {
+    console.log(`Skipping ${relativePath}: ${reason}`);
+    if (count === MAX_SKIP_LOGS_PER_REASON - 1) {
+      console.log(`...further skips for "${reason}" will be suppressed.`);
+    }
+  }
+  skipLogCounts.set(reason, count + 1);
+}
+
+function emitSkipSummary() {
+  if (skipLogCounts.size === 0) {
+    return;
+  }
+  console.log('\nSkip summary:');
+  for (const [reason, count] of skipLogCounts.entries()) {
+    console.log(` - ${reason}: ${count} file(s)`);
+  }
 }
 
 // ============================================================================
